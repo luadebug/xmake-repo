@@ -14,14 +14,24 @@ package("keystone")
         add_syslinks("shell32")
     end
 
+    add_configs("build_libs_only", { 
+        description = "Only build Keystone library (no tools)", 
+        default = true, 
+        type = "boolean" 
+    })
+
+
     on_load(function (package)
         package:addenv("PATH", "bin")
     end)
+
 
     on_install(function (package)
         local configs = {}
         table.insert(configs, "-DCMAKE_BUILD_TYPE=" .. (package:is_debug() and "Debug" or "Release"))
         table.insert(configs, "-DBUILD_SHARED_LIBS=" .. (package:config("shared") and "ON" or "OFF"))
+        table.insert(configs, "-DBUILD_LIBS_ONLY=" .. (package:config("build_libs_only") and "ON" or "OFF"))
+        table.insert(configs, "-DKEYSTONE_BUILD_STATIC_RUNTIME=" .. (package:config("static") and "ON" or "OFF"))
         import("package.tools.cmake").install(package, configs)
         os.cp("include", package:installdir())
     end)
