@@ -13,22 +13,21 @@ package("keystone")
     if is_plat("windows") then
         add_syslinks("shell32")
     end
+
+    on_load(function (package)
+        package:add("PATH", "bin")
+    end)
+
     on_install(function (package)
         local configs = {}
-        
         table.insert(configs, "-DCMAKE_BUILD_TYPE=" .. (package:is_debug() and "Debug" or "Release"))
         table.insert(configs, "-DBUILD_SHARED_LIBS=" .. (package:config("shared") and "ON" or "OFF"))
-
         import("package.tools.cmake").install(package, configs)
-
         os.cp("include", package:installdir())
-    end)
-    on_load(function (package)
-        package:addenv("PATH", "bin")
     end)
 
     on_test(function (package)
-        if package:is_plat(os.host()) and not package:config("shared") then
+        if not package:is_cross() and not package:config("shared") then
             os.vrun('kstool -b x64 "mov rax, 1; ret"')
         end
         assert(package:has_cfuncs("ks_version", {includes = "keystone/keystone.h"}))
