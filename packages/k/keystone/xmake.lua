@@ -23,6 +23,9 @@ package("keystone")
 
         os.cp("include", package:installdir())
     end)
+    on_load(function (package)
+        package:addenv("PATH", "bin")
+    end)
 
     on_test(function (package)
         if package:is_plat(os.host()) then
