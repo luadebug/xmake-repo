@@ -15,7 +15,7 @@ package("keystone")
     end
 
     on_load(function (package)
-        package:add("PATH", "bin")
+        package:addenv("PATH", "bin")
     end)
 
     on_install(function (package)
