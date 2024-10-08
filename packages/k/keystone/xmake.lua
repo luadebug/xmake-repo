@@ -28,7 +28,7 @@ package("keystone")
     end)
 
     on_test(function (package)
-        if package:is_plat(os.host()) then
+        if package:is_plat(os.host()) and not package:config("shared") then
             os.vrun('kstool -b x64 "mov rax, 1; ret"')
         end
         assert(package:has_cfuncs("ks_version", {includes = "keystone/keystone.h"}))
