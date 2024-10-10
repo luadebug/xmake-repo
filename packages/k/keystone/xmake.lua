@@ -7,7 +7,9 @@ package("keystone")
              "https://github.com/keystone-engine/keystone.git")
 
     add_versions("0.9.2", "c9b3a343ed3e05ee168d29daf89820aff9effb2c74c6803c2d9e21d55b5b7c24")
-
+    if is_plat("android") then
+        add_patches("0.9.2", "patches/0.9.2/android-NDK-r37.patch", "c9b3a343ed3e05ee168d29daf89820aff9effb2c74c6803c2d9e21d55b5b7c24")
+    end
     add_deps("cmake")
     add_deps("python 3.x", {kind = "binary"})
 
