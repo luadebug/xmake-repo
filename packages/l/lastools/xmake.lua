@@ -23,5 +23,5 @@ package("lastools")
     end)
 
     on_test(function (package)
-        assert(package:has_cfuncs("demzip_get_header_pointer", {includes = "LASlib/demzip_api.h"}))
+        assert(package:has_cxxfuncs("IS_LITTLE_ENDIAN", {languages = "c++17", includes = "LASlib/mydefs.hpp"}))
     end)
