@@ -15,6 +15,7 @@ package("lastools")
         io.replace("CMakeLists.txt", 
         [[set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib/LASlib")]], 
         [[set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib")]], {plain = true})
+        io.replace("CMakeLists.txt", "add_subdirectory(src)", "", {plain = true})
         local configs = {}
         table.insert(configs, "-DLASZIP_BUILD_STATIC=" .. (package:config("shared") and "OFF" or "ON"))
         table.insert(configs, "-DCMAKE_BUILD_TYPE=" .. (package:is_debug() and "Debug" or "Release"))
