@@ -29,6 +29,24 @@ package("libmem")
     end)
 
     on_install("windows", "linux", "bsd", function (package)
+        io.replace("src/win/memory.c", 
+            "if (!ReadProcessMemory(hproc, source, dest, size, &bytes_read))", 
+            "if (!ReadProcessMemory(hproc, (LPCVOID)source, dest, size, &bytes_read))", {plain = true})
+        io.replace("src/win/memory.c", 
+            "if (!WriteProcessMemory(hproc, dest, source, size, &bytes_written))", 
+            "if (!WriteProcessMemory(hproc, (LPVOID)dest, source, size, &bytes_written))", {plain = true})
+        io.replace("src/win/memory.c", 
+            "if (!VirtualProtect(address, size, osprot, &old_osprot))", 
+            "if (!VirtualProtect((LPVOID)address, size, osprot, &old_osprot))", {plain = true})
+        io.replace("src/win/memory.c", 
+            "if (!VirtualProtectEx(hproc, address, size, osprot, &old_osprot))", 
+            "if (!VirtualProtectEx(hproc, (LPVOID)address, size, osprot, &old_osprot))", {plain = true})
+        io.replace("src/win/memory.c", 
+            "return VirtualFree(alloc, size, MEM_RELEASE) ? LM_TRUE : LM_FALSE;", 
+            "return VirtualFree((LPVOID)alloc, size, MEM_RELEASE) ? LM_TRUE : LM_FALSE;", {plain = true})
+        io.replace("src/win/memory.c", 
+            "ret = VirtualFreeEx(hproc, alloc, size, MEM_RELEASE);", 
+            "ret = VirtualFreeEx(hproc, (LPVOID)alloc, size, MEM_RELEASE);", {plain = true})
         os.cp(path.join(package:scriptdir(), "port", "xmake.lua"), "xmake.lua")
         import("package.tools.xmake").install(package)
     end)
