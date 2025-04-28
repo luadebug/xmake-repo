@@ -1,4 +1,4 @@
-package("mbedtls")
+package("")
     set_homepage("https://tls.mbed.org")
     set_description("An open source, portable, easy to use, readable and flexible TLS library, and reference implementation of the PSA Cryptography API")
     set_license("Apache-2.0")
