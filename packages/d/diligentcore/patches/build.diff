@@ -51,7 +51,7 @@ index fc3c5d8..9edc6a4 100644
  
      install(FILES License.txt DESTINATION "Licenses" RENAME DiligentEngine-License.txt)
 diff --git a/Graphics/Archiver/CMakeLists.txt b/Graphics/Archiver/CMakeLists.txt
-index 6af0f44..ecd1b96 100644
+index 6af0f44..81b5fab 100644
 --- a/Graphics/Archiver/CMakeLists.txt
 +++ b/Graphics/Archiver/CMakeLists.txt
 @@ -88,9 +88,16 @@ PRIVATE
@@ -109,22 +109,21 @@ index 6af0f44..ecd1b96 100644
 +    target_link_directories(Diligent-Archiver-shared PRIVATE ${spirv-cross-c_LIBDIR})
 +endif()
 +
-+if (NOT DILIGENT_NO_GLSLANG)
-+    target_link_directories(Diligent-Archiver-shared PRIVATE ${SPIRV-Tools_LIBDIR})
-+endif()
-+
 +if(glslang_FOUND)
 +    target_link_directories(Diligent-Archiver-shared PRIVATE ${glslang_LIBDIR})
 +endif()
 +
++if (NOT DILIGENT_NO_GLSLANG)
++    target_link_directories(Diligent-Archiver-shared PRIVATE ${SPIRV-Tools_LIBDIR})
++endif()
 +
  target_link_libraries(Diligent-Archiver-shared
  PUBLIC
      Diligent-ArchiverInterface
  PRIVATE
      Diligent-BuildSettings
--    ${WHOLE_ARCHIVE_FLAG} Diligent-Archiver-static ${NO_WHOLE_ARCHIVE_FLAG}
-+    ${WHOLE_ARCHIVE_FLAG} Diligent-Archiver-static ${NO_WHOLE_ARCHIVE_FLAG} $<$<NOT:$<BOOL:${DILIGENT_NO_GLSLANG}>>:${SPIRV-Tools_LIBRARIES}>
+     ${WHOLE_ARCHIVE_FLAG} Diligent-Archiver-static ${NO_WHOLE_ARCHIVE_FLAG}
++    $<$<NOT:$<BOOL:${DILIGENT_NO_GLSLANG}>>:${SPIRV-Tools_LIBRARIES}>
  )
  
  if(PLATFORM_WIN32)

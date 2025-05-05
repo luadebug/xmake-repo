@@ -7,7 +7,7 @@ package("diligentcore")
              "https://github.com/DiligentGraphics/DiligentCore.git", {submodules = false})
 
     add_versions("v2.5.6", "abc190c05ee7e5ef2bba52fcbc5fdfe2256cce3435efba9cfe263a386653f671")
-    add_patches("v2.5.6", "patches/build.diff", "4660c0b9c20b3f352e0f8cacdfea7d694673acda6599644cf874c6c49b2b3b48")
+    add_patches("v2.5.6", "patches/build.diff", "81aba3445297eee8787ad397a6b2ce19b8077eb79aa294f3fc40ce6374b4fa74")
 
     add_includedirs("include", "include/DiligentCore")
 
@@ -74,6 +74,7 @@ package("diligentcore")
         if package:config("hlsl") or package:config("archiver") or package:config("glslang") then
             package:add("deps", "glslang")
             package:add("deps", "spirv-tools")
+            package:add("links", "glslang", "MachineIndependent", "GenericCodeGen", "OSDependent", "SPIRV", "SPVRemapper", "SPIRV-Tools-link", "SPIRV-Tools-opt", "SPIRV-Tools")
         end
 
         package:add("deps", "spirv-cross")
