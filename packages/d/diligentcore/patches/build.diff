@@ -51,7 +51,7 @@ index fc3c5d8..9edc6a4 100644
  
      install(FILES License.txt DESTINATION "Licenses" RENAME DiligentEngine-License.txt)
 diff --git a/Graphics/Archiver/CMakeLists.txt b/Graphics/Archiver/CMakeLists.txt
-index 6af0f44..ef9332b 100644
+index 6af0f44..6b91db4 100644
 --- a/Graphics/Archiver/CMakeLists.txt
 +++ b/Graphics/Archiver/CMakeLists.txt
 @@ -88,9 +88,16 @@ PRIVATE
@@ -97,11 +97,10 @@ index 6af0f44..ef9332b 100644
      elseif(PLATFORM_ANDROID)
          target_link_libraries(Diligent-Archiver-static PRIVATE GLESv3 EGL)
      elseif(PLATFORM_EMSCRIPTEN)
-@@ -175,6 +183,22 @@ if(WEBGPU_SUPPORTED)
-         ../GraphicsEngineWebGPU/include
+@@ -176,12 +184,28 @@ if(WEBGPU_SUPPORTED)
      )
  endif()
-+target_compile_definitions(Diligent-Archiver-static PUBLIC DILIGENT_SPIRV_CROSS_NAMESPACE=spirv_cross)
+ 
 +if (glew_FOUND)
 +    target_link_directories(Diligent-Archiver-shared PRIVATE ${glew_LIBRARY_DIRS})
 +endif()
@@ -117,9 +116,29 @@ index 6af0f44..ef9332b 100644
 +if (NOT DILIGENT_NO_GLSLANG)
 +    target_link_directories(Diligent-Archiver-shared PRIVATE ${SPIRV-Tools_LIBDIR})
 +endif()
- 
++
  target_link_libraries(Diligent-Archiver-shared
  PUBLIC
+     Diligent-ArchiverInterface
+ PRIVATE
+     Diligent-BuildSettings
+-    ${WHOLE_ARCHIVE_FLAG} Diligent-Archiver-static ${NO_WHOLE_ARCHIVE_FLAG}
++    ${WHOLE_ARCHIVE_FLAG} Diligent-Archiver-static ${NO_WHOLE_ARCHIVE_FLAG} $<$<NOT:$<BOOL:${DILIGENT_NO_GLSLANG}>>:${SPIRV-Tools_LIBRARIES}>
+ )
+ 
+ if(PLATFORM_WIN32)
+diff --git a/Graphics/Archiver/src/Archiver_GL.cpp b/Graphics/Archiver/src/Archiver_GL.cpp
+index a7435c9..596a8b7 100644
+--- a/Graphics/Archiver/src/Archiver_GL.cpp
++++ b/Graphics/Archiver/src/Archiver_GL.cpp
+@@ -42,6 +42,7 @@
+ #    include "GLSLUtils.hpp"
+ #    include "GLSLangUtils.hpp"
+ #    include "spirv_glsl.hpp"
++#    include "SPIRVShaderResources.hpp" // required for diligent_spirv_cross
+ #endif
+ 
+ namespace Diligent
 diff --git a/Graphics/GraphicsEngineD3D11/CMakeLists.txt b/Graphics/GraphicsEngineD3D11/CMakeLists.txt
 index adef784..38d7036 100644
 --- a/Graphics/GraphicsEngineD3D11/CMakeLists.txt

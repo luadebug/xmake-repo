@@ -7,7 +7,7 @@ package("diligentcore")
              "https://github.com/DiligentGraphics/DiligentCore.git", {submodules = false})
 
     add_versions("v2.5.6", "abc190c05ee7e5ef2bba52fcbc5fdfe2256cce3435efba9cfe263a386653f671")
-    add_patches("v2.5.6", "patches/build.diff", "8105ca9559eb248463bb2e4e531cd5ea175d8145bcd50b829267ec7a30266fd0")
+    add_patches("v2.5.6", "patches/build.diff", "5413fd1f0a78376e6e501da6f92fe28fde5c7f9759c8ec07073bf71f7d0fb970")
 
     add_includedirs("include", "include/DiligentCore")
 
@@ -30,7 +30,7 @@ package("diligentcore")
     add_configs("format_validation",    {description = "Enable format validation", default = false, type = "boolean"})
 
     if is_plat("linux") then
-        add_syslinks("m", "pthread", "dl")
+        add_syslinks("pthread", "dl")
     end
 
     if is_plat("macosx") then
