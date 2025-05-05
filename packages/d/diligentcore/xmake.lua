@@ -7,7 +7,7 @@ package("diligentcore")
              "https://github.com/DiligentGraphics/DiligentCore.git", {submodules = false})
 
     add_versions("v2.5.6", "abc190c05ee7e5ef2bba52fcbc5fdfe2256cce3435efba9cfe263a386653f671")
-    add_patches("v2.5.6", "patches/build.diff", "47857632836e43728d32042654140b32b9c880803a84778f1c516953e4a94a61")
+    add_patches("v2.5.6", "patches/build.diff", "b2ef00eb7ee162e408a80bf34ea76fd12630bfaa8f865d79ead010c3441cda54")
 
     add_includedirs("include", "include/DiligentCore")
 

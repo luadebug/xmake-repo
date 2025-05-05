@@ -30,23 +30,10 @@ index e97b96b..bf9d26e 100644
      endif()
  
 diff --git a/CMakeLists.txt b/CMakeLists.txt
-index fc3c5d8..eb69d4e 100644
+index fc3c5d8..9edc6a4 100644
 --- a/CMakeLists.txt
 +++ b/CMakeLists.txt
-@@ -517,12 +517,6 @@ if (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-             -Wno-error=unguarded-availability-new
-         )
-     endif()
--elseif (CMAKE_CXX_COMPILER_ID MATCHES "GNU")
--    if (CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL "9.0")
--        message(WARNING "gcc 9.0 and above seemingly produce invalid binary code with O2 and O3 optimization levels. Optimization in release configurations will be downgraded to O1. It is strongly recommended to use clang.")
--        set(GCC_OPTIMIZATION_LEVEL "-O1")
--        target_compile_options(Diligent-BuildSettings INTERFACE $<$<CONFIG:Release,RelWithDebInfo>:${GCC_OPTIMIZATION_LEVEL}>)
--    endif()
- endif()
- 
- if(PLATFORM_MACOS)
-@@ -614,7 +608,6 @@ add_subdirectory(Primitives)
+@@ -614,7 +614,6 @@ add_subdirectory(Primitives)
  add_subdirectory(Platforms)
  add_subdirectory(Common)
  add_subdirectory(Graphics)
@@ -54,7 +41,7 @@ index fc3c5d8..eb69d4e 100644
  
  
  # Installation instructions
-@@ -625,7 +618,7 @@ if(DILIGENT_INSTALL_CORE)
+@@ -625,7 +624,7 @@ if(DILIGENT_INSTALL_CORE)
          "${DILIGENT_CORE_INSTALL_LIBS_LIST}"
          DiligentCore-static                     # Custom target name
          DiligentCore                            # Folder
@@ -133,18 +120,6 @@ index 6af0f44..c3d078c 100644
  target_link_libraries(Diligent-Archiver-shared
  PUBLIC
      Diligent-ArchiverInterface
-diff --git a/Graphics/Archiver/src/Archiver_GL.cpp b/Graphics/Archiver/src/Archiver_GL.cpp
-index a7435c9..596a8b7 100644
---- a/Graphics/Archiver/src/Archiver_GL.cpp
-+++ b/Graphics/Archiver/src/Archiver_GL.cpp
-@@ -42,6 +42,7 @@
- #    include "GLSLUtils.hpp"
- #    include "GLSLangUtils.hpp"
- #    include "spirv_glsl.hpp"
-+#    include "SPIRVShaderResources.hpp" // required for diligent_spirv_cross
- #endif
- 
- namespace Diligent
 diff --git a/Graphics/GraphicsEngineD3D11/CMakeLists.txt b/Graphics/GraphicsEngineD3D11/CMakeLists.txt
 index adef784..38d7036 100644
 --- a/Graphics/GraphicsEngineD3D11/CMakeLists.txt
