@@ -7,7 +7,7 @@ package("diligentcore")
              "https://github.com/DiligentGraphics/DiligentCore.git", {submodules = false})
 
     add_versions("v2.5.6", "abc190c05ee7e5ef2bba52fcbc5fdfe2256cce3435efba9cfe263a386653f671")
-    add_patches("v2.5.6", "patches/build.diff", "3187570fe53da74a7aabd915cf08ebd0a3ae9817f257803019fd5c8d705617c5")
+    add_patches("v2.5.6", "patches/build.diff", "69e06bee094d660f3d14ac29441fb256a43b3e6974f9821d9f55e8544917ed88")
 
     add_includedirs("include", "include/DiligentCore")
 
@@ -30,7 +30,7 @@ package("diligentcore")
     add_configs("format_validation",    {description = "Enable format validation", default = false, type = "boolean"})
 
     if is_plat("linux") then
-        add_syslinks("pthread", "dl")
+        add_syslinks("m", "pthread", "dl")
     end
 
     if is_plat("macosx") then
@@ -44,6 +44,9 @@ package("diligentcore")
 
     if is_plat("linux") then
         add_deps("libx11", "libxrandr", "libxrender", "libxinerama", "libxfixes", "libxcursor", "libxi", "libxext", "wayland")
+        add_links("Diligent-Common", "Diligent-ShaderTools", "Diligent-GraphicsEngine", "Diligent-GraphicsAccessories", "Diligent-BasicPlatform", "Diligent-GraphicsTools", "DiligentCore", "Diligent-HLSL2GLSLConverterLib", "Diligent-GraphicsEngineOpenGL-static", "Diligent-LinuxPlatform", "Diligent-Archiver-static", "Diligent-Primitives", "xxhash", "Xrandr", "Xinerama", "Xcursor", "Xrender", "Xi", "Xfixes", "Xext", "wayland-server", "wayland-client", "wayland-egl", "wayland-cursor", "xml2", "ffi", 
+        "expat", "OpenGL", "glew", "X11-xcb", "X11", "xcb-dri2", "xcb-xf86dri", "xcb-record", "xcb-damage", "xcb-ge", "xcb-xfixes", "xcb-screensaver", "xcb-present", "xcb-dpms", "xcb-xevie", "xcb-xinerama", "xcb-dbe", "xcb-randr", "xcb-render", "xcb-glx", "xcb-res", "xcb-xinput", "xcb-shm", "xcb-sync", "xcb-dri3", "xcb-shape", "xcb-xvmc", "xcb-xv", "xcb-xtest", "xcb", "xcb-composite", "xcb-xkb", "Xau", "Xdmcp", "glslang", "MachineIndependent", 
+        "GenericCodeGen", "OSDependent", "SPIRV", "SPVRemapper", "SPIRV-Tools-link", "SPIRV-Tools-reduce", "SPIRV-Tools-opt", "SPIRV-Tools", "spirv-cross-c", "spirv-cross-cpp", "spirv-cross-reflect", "spirv-cross-msl", "spirv-cross-util", "spirv-cross-hlsl", "spirv-cross-glsl", "spirv-cross-core", "m", "GL", "dl", "pthread")
     end
 
     on_load(function (package)

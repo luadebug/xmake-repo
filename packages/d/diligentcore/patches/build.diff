@@ -51,7 +51,7 @@ index fc3c5d8..9edc6a4 100644
  
      install(FILES License.txt DESTINATION "Licenses" RENAME DiligentEngine-License.txt)
 diff --git a/Graphics/Archiver/CMakeLists.txt b/Graphics/Archiver/CMakeLists.txt
-index 6af0f44..5b9f5e1 100644
+index 6af0f44..c3d078c 100644
 --- a/Graphics/Archiver/CMakeLists.txt
 +++ b/Graphics/Archiver/CMakeLists.txt
 @@ -88,9 +88,16 @@ PRIVATE
@@ -97,7 +97,7 @@ index 6af0f44..5b9f5e1 100644
      elseif(PLATFORM_ANDROID)
          target_link_libraries(Diligent-Archiver-static PRIVATE GLESv3 EGL)
      elseif(PLATFORM_EMSCRIPTEN)
-@@ -176,6 +184,26 @@ if(WEBGPU_SUPPORTED)
+@@ -176,6 +184,22 @@ if(WEBGPU_SUPPORTED)
      )
  endif()
  
@@ -115,10 +115,6 @@ index 6af0f44..5b9f5e1 100644
 +
 +if (NOT DILIGENT_NO_GLSLANG)
 +    target_link_directories(Diligent-Archiver-shared PRIVATE ${SPIRV-Tools_LIBDIR})
-+endif()
-+
-+if(NOT(DILIGENT_NO_GLSLANG))
-+    target_link_libraries(Diligent-Archiver-shared PRIVATE ${glslang_LIBRARIES} ${SPIRV-Tools_LIBRARIES})
 +endif()
 +
  target_link_libraries(Diligent-Archiver-shared
