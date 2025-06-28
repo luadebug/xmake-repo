@@ -26,5 +26,5 @@ package("effcee")
             void test() {
                 auto opt = effcee::Options().SetChecksName("checks");
             }
-        ]]}, {configs = {languages = "c++11"}, includes = "effcee/effcee.h"}))
+        ]]}, {configs = {languages = "c++17"}, includes = "effcee/effcee.h"}))
     end)
