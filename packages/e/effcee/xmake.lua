@@ -13,6 +13,7 @@ package("effcee")
         io.gsub(path.join("cmake", "setup_build.cmake"), "find_host_package%(", "#")
         io.gsub("CMakeLists.txt", "add_subdirectory%(third_party%)", "#")
         local configs = {"-DEFFCEE_BUILD_SAMPLES=OFF", "-DEFFCEE_BUILD_TESTING=OFF"}
+        table.insert(configs, "-DCMAKE_BUILD_TYPE=" .. (package:is_debug() and "Debug" or "Release"))
         table.insert(configs, "-DBUILD_SHARED_LIBS=" .. (package:config("shared") and "ON" or "OFF"))
         if package:is_plat("windows") then
             table.insert(configs, "-DEFFCEE_ENABLE_SHARED_CRT=" .. (package:config("vs_runtime"):startswith("MT") and "OFF" or "ON"))
