@@ -1,5 +1,4 @@
 package("effcee")
-
     set_homepage("https://github.com/google/effcee")
     set_description("Effcee is a C++ library for stateful pattern matching of strings.")
     set_license("Apache-2.0")
@@ -10,7 +9,7 @@ package("effcee")
     add_deps("cmake")
     add_deps("re2")
 
-    on_install("macosx", "linux", "windows", function (package)
+    on_install(function (package)
         io.gsub(path.join("cmake", "setup_build.cmake"), "find_host_package%(", "#")
         io.gsub("CMakeLists.txt", "add_subdirectory%(third_party%)", "#")
         local configs = {"-DEFFCEE_BUILD_SAMPLES=OFF", "-DEFFCEE_BUILD_TESTING=OFF"}
