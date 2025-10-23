@@ -133,6 +133,10 @@ package("llvm")
     end)
 
     on_install("linux", "macosx", "bsd", function (package)
+        local cflags = ""
+        if package:is_plat("macosx") then
+            cflags = "-isystem /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1"
+        end
         local projects = {
             "bolt",
             "clang",
@@ -208,7 +212,7 @@ package("llvm")
             end
         end
         os.cd("llvm")
-        import("package.tools.cmake").install(package, configs)
+        import("package.tools.cmake").install(package, configs, {cflags = cflags})
     end)
 
     on_component("mlir",      "components.mlir")
