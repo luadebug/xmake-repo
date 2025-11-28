@@ -32,7 +32,7 @@ package("nri")
 
     on_load(function (package)
         if package:config("d3d11") then
-            add_syslinks("d3d11")
+            package:add("syslinks", "d3d11")
         end
     end)
 
