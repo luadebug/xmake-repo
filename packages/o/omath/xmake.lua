@@ -38,7 +38,7 @@ package("omath")
         end
     end)
 
-    on_install("!macosx and !iphoneos and !android and !bsd", function (package)
+    on_install("!android and !bsd", function (package)
         local configs = {
             "-DOMATH_BUILD_TESTS=OFF",
             "-DOMATH_BUILD_BENCHMARK=OFF",
