@@ -9,8 +9,11 @@ function get_libmem_arch()
         return "x86"
     elseif is_arch("arm64", "aarch64", "arm64-v8a") then
         return "aarch64"
+    elseif is_arch("arm.*") then
+        return "arm"
+    else
+        return "generic"
     end
-    return "generic"
 end
 
 local LIBMEM_ARCH = get_libmem_arch()
@@ -43,6 +46,8 @@ target("libmem")
         add_files("src/common/arch/x86.c")
     elseif LIBMEM_ARCH == "aarch64" then
         add_files("src/common/arch/aarch64.c")
+    elseif LIBMEM_ARCH == "arm" then
+        add_files("src/common/arch/arm.c")
     else
         add_files("src/common/arch/generic.c")
     end
