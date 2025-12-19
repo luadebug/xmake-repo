@@ -32,14 +32,14 @@ index 0000000..8eb7373
 +
 +    /* Calculate signed relative offset in words */
 +    int32_t rel = ((int32_t)to - (int32_t)from - 8) / 4;
-+    
++
 +    lm_size_t size;
 +    lm_byte_t *code;
 +
 +    if (rel >= -0x800000 && rel <= 0x7FFFFF) {
 +        /* Fits in 24-bit signed branch */
 +        uint32_t inst = 0xEA000000 | (rel & 0x00FFFFFF);
-+        
++
 +        size = 4;
 +        code = malloc(size);
 +        if (!code) return 0;
@@ -48,7 +48,7 @@ index 0000000..8eb7373
 +        /* Absolute via literal pool */
 +        uint32_t addr = (uint32_t)to;
 +        memcpy(&jump_abs[4], &addr, sizeof(addr));
-+        
++
 +        size = sizeof(jump_abs);
 +        code = malloc(size);
 +        if (!code) return 0;

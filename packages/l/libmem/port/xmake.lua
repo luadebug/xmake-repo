@@ -17,7 +17,6 @@ function get_libmem_arch()
 end
 
 local LIBMEM_ARCH = get_libmem_arch()
-local IS_X86_FAMILY = is_arch("x86_64", "x64", "amd64", "x86", "i386", "i686")
 
 target("libmem")
     set_kind("$(kind)")
@@ -42,7 +41,7 @@ target("libmem")
         "external/llvm/lib/Demangle/*.cpp"
     )
 
-    if IS_X86_FAMILY then
+    if is_arch("x86_64", "x64", "amd64", "x86", "i386", "i686") then
         add_files("src/common/arch/x86.c")
     elseif LIBMEM_ARCH == "aarch64" then
         add_files("src/common/arch/aarch64.c")
@@ -71,7 +70,7 @@ target("libmem")
 
         if is_plat("mingw") then
             add_syslinks("uuid")
-            add_cflags("-Wno-int-conversion", "-Wno-incompatible-pointer-types", {force = true})
+            add_cflags("-Wno-int-conversion", "-Wno-incompatible-pointer-types")
         end
 
     elseif is_plat("linux", "android") then
@@ -113,12 +112,6 @@ target("libmem")
 
         add_syslinks("dl", "stdc++", "m", "kvm", "procstat", "elf")
     end
-
-    on_load(function(target)
-        print("[libmem] Platform: %s", get_config("plat"))
-        print("[libmem] Architecture: %s", LIBMEM_ARCH)
-        print("[libmem] Kind: %s", get_config("kind"))
-    end)
 
     if is_kind("static") then
         set_policy("build.merge_archive", true)

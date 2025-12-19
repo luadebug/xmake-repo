@@ -12,7 +12,7 @@ package("libmem")
     add_versions("5.0.3", "75a190d1195c641c7d5d2c37ac79d8d1b5f18e43268d023454765a566d6f0d88")
     add_versions("5.0.2", "99adea3e86bd3b83985dce9076adda16968646ebd9d9316c9f57e6854aeeab9c")
 
-    add_patches("5.1.4", "patches/5.1.4/arm32.diff", "66fe0f5b6a14ed5612cde3b6e3de37735e43ef4747097d1d779a1cfd52c7a308")
+    add_patches("5.1.4", "patches/5.1.4/arm32.diff", "fc4576406f3603b33fcee733ea5bfd594f1220513f1bb40e23283bf2832d9379")
     add_patches("5.1.0", "patches/5.1.0/fix-freebsd.diff", "98a454d2c71f8f7a63ed5714301ad5f51f92790e3debe5b35a16f14b83c34404")
     add_patches(">=5.0.5", "patches/5.0.5/fix-mingw.diff", "7239f459204975ce2efcf63529dcb09273028c4dc166d7cbacb5f5f0e70f93a9")
 
