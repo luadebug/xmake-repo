@@ -21,7 +21,10 @@ package("sclalertview")
             "-quiet",
             "-project", "SCLAlertView.xcodeproj",
             "-scheme", "SCLAlertView",
-            "-configuration", conf
+            "-configuration", conf,
+            "CODE_SIGN_IDENTITY=\"\"",
+            "CODE_SIGNING_REQUIRED=NO",
+            "CODE_SIGNING_ALLOWED=NO",
         })
         
         -- os.mv(path.join(moltenvk_rootdir, "include"), package:installdir())
