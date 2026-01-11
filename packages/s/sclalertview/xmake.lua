@@ -19,9 +19,8 @@ package("sclalertview")
 
         os.vrunv("xcodebuild", {
             "build",
-            "-quiet",
             "-project", "SCLAlertView.xcodeproj",
-            "-scheme", "SCLAlertView",
+            "-target", "SCLAlertView",
             "-configuration", conf,
             "-sdk", sdk,
             "CODE_SIGN_IDENTITY=\"\"",
