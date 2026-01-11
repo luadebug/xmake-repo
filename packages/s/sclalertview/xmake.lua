@@ -29,13 +29,13 @@ package("sclalertview")
         os.vrunv("xcodebuild", {
             "build",
             "-project", "SCLAlertView.xcodeproj",
-            "-target", "SCLAlertView",
+            "-scheme", "SCLAlertViewFramework",
+            "-target", "SCLAlertViewFramework",
             "-configuration", conf,
             "-sdk", sdk,
             "CODE_SIGN_IDENTITY=\"\"",
             "CODE_SIGNING_REQUIRED=NO",
             "CODE_SIGNING_ALLOWED=NO",
-            "PRODUCT_NAME=SCLAlertViewLibrary"
         })
 
         os.vrunv("find", {
