@@ -29,7 +29,6 @@ package("sclalertview")
         os.vrunv("xcodebuild", {
             "build",
             "-project", "SCLAlertView.xcodeproj",
-            "-scheme", "SCLAlertViewFramework",
             "-target", "SCLAlertViewFramework",
             "-configuration", conf,
             "-sdk", sdk,
