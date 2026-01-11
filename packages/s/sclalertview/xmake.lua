@@ -51,5 +51,5 @@ package("sclalertview")
     end)
 
     on_test(function (package)
-        assert(package:has_cfuncs("SCLAlertView.cornerRadius", {includes = "SCLAlertView.h"}))
+        assert(package:has_ctypes("SCLAlertView", {includes = "SCLAlertView.h"}))
     end)
