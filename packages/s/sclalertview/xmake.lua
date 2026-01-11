@@ -35,6 +35,7 @@ package("sclalertview")
             "CODE_SIGN_IDENTITY=\"\"",
             "CODE_SIGNING_REQUIRED=NO",
             "CODE_SIGNING_ALLOWED=NO",
+            "MACH_O_TYPE=staticlib"
         })
 
         os.vrunv("find", {
