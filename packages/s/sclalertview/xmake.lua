@@ -12,11 +12,20 @@ package("sclalertview")
         local conf = package:is_debug() and "Debug" or "Release"
         local sdk = package:is_plat("iphoneos") and "iphoneos" or "macosx"
 
+        print("=== 查看项目 targets ===")
         os.vrunv("xcodebuild", {
             "-list",
             "-project", "SCLAlertView.xcodeproj"
         })
+        
+        print("=== 查看项目构建设置 ===")
+        os.vrunv("xcodebuild", {
+            "-showBuildSettings",
+            "-project", "SCLAlertView.xcodeproj",
+            "-target", "SCLAlertView"
+        })
 
+        print("=== 尝试构建框架 ===")
         os.vrunv("xcodebuild", {
             "build",
             "-project", "SCLAlertView.xcodeproj",
@@ -26,6 +35,7 @@ package("sclalertview")
             "CODE_SIGN_IDENTITY=\"\"",
             "CODE_SIGNING_REQUIRED=NO",
             "CODE_SIGNING_ALLOWED=NO",
+            "PRODUCT_NAME=SCLAlertViewLibrary"
         })
 
         os.vrunv("find", {
@@ -48,5 +58,5 @@ package("sclalertview")
     end)
 
     on_test(function (package)
-        assert(package:has_cfuncs("vkGetDeviceProcAddr", {includes = "vulkan/vulkan_core.h"}))
+        assert(package:has_ctypes("SCLAlertView", {includes = "SCLAlertView/SCLAlertView.h"}))
     end)
