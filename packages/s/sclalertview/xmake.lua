@@ -10,6 +10,7 @@ package("sclalertview")
 
     on_install("macosx", "iphoneos", function (package)
         local conf = package:is_debug() and "Debug" or "Release"
+        local sdk = package:is_plat("iphoneos") and "iphoneos" or "macosx"
 
         os.vrunv("xcodebuild", {
             "-list",
@@ -22,10 +23,14 @@ package("sclalertview")
             "-project", "SCLAlertView.xcodeproj",
             "-scheme", "SCLAlertView",
             "-configuration", conf,
+            "-sdk", sdk,
             "CODE_SIGN_IDENTITY=\"\"",
             "CODE_SIGNING_REQUIRED=NO",
             "CODE_SIGNING_ALLOWED=NO",
         })
+
+        os.vrunv("find", {
+            "."})
         
         -- os.mv(path.join(moltenvk_rootdir, "include"), package:installdir())
         -- os.mv(path.join(moltenvk_rootdir, "dylib", plat, "*"), package:installdir("lib"))
