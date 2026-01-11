@@ -13,15 +13,14 @@ package("sclalertview")
 
         os.vrunv("xcodebuild", {
             "-list",
-            "-workspace",
-            "project.xcworkspace"
+            "-project", "SCLAlertView.xcodeproj"
         })
 
         os.vrunv("xcodebuild", {
             "build",
             "-quiet",
-            "-project", "MoltenVKPackaging.xcodeproj", 
-            "-scheme", "MoltenVK Package (" .. plat .. " only)",
+            "-project", "SCLAlertView.xcodeproj",
+            "-scheme", "SCLAlertView",
             "-configuration", conf
         })
         
