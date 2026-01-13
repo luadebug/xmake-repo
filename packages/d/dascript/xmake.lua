@@ -10,9 +10,8 @@ package("dascript")
     add_deps("flex", "bison")
 
     on_install(function (package)
-        io.replace("CMakeLists.txt", [[set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${EXECUTABLE_OUTPUT_PATH})]], [[bin]], {plain = true})
-        io.replace("CMakeLists.txt", [[set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/lib)]], [[lib]], {plain = true})
-        io.replace("CMakeLists.txt", [[set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/lib)]], [[lib]], {plain = true})
+        io.replace("CMakeLists.txt", [[${EXECUTABLE_OUTPUT_PATH}]], [[bin]], {plain = true})
+        io.replace("CMakeLists.txt", [[${PROJECT_SOURCE_DIR}/lib]], [[lib]], {plain = true})
         local configs = {}
         table.insert(configs, "-DCMAKE_BUILD_TYPE=" .. (package:is_debug() and "Debug" or "Release"))
         table.insert(configs, "-DDAS_ENABLE_DLL=" .. (package:config("shared") and "1" or "0"))
