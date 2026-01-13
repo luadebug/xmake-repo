@@ -13,9 +13,9 @@ package("dascript")
         io.replace("CMakeLists.txt", [[${EXECUTABLE_OUTPUT_PATH}]], [[bin]], {plain = true})
         io.replace("CMakeLists.txt", [[${PROJECT_SOURCE_DIR}/lib]], [[lib]], {plain = true})
         local configs = {
-            "DAS_PROFILE_DISABLED=ON",
-            "DAS_TUTORIAL_DISABLED=ON",
-            "DAS_TESTS_DISABLED=ON"
+            "-DDAS_PROFILE_DISABLED=ON",
+            "-DDAS_TUTORIAL_DISABLED=ON",
+            "-DDAS_TESTS_DISABLED=ON"
         }
         table.insert(configs, "-DCMAKE_BUILD_TYPE=" .. (package:is_debug() and "Debug" or "Release"))
         table.insert(configs, "-DDAS_ENABLE_DLL=" .. (package:config("shared") and "1" or "0"))
