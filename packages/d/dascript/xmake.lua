@@ -12,7 +12,7 @@ package("dascript")
     on_install(function (package)
         io.replace("CMakeLists.txt", [[${EXECUTABLE_OUTPUT_PATH}]], [[bin]], {plain = true})
         io.replace("CMakeLists.txt", [[${PROJECT_SOURCE_DIR}/lib]], [[lib]], {plain = true})
-        local configs = {}
+        local configs = {"DAS_TESTS_DISABLED=ON"}
         table.insert(configs, "-DCMAKE_BUILD_TYPE=" .. (package:is_debug() and "Debug" or "Release"))
         table.insert(configs, "-DDAS_ENABLE_DLL=" .. (package:config("shared") and "1" or "0"))
         import("package.tools.cmake").install(package, configs)
