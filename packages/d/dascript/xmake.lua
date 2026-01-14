@@ -39,9 +39,15 @@ package("dascript")
         assert(package:check_cxxsnippets({test = [[
             #include <daScript/daScript.h>
             void test() {
+                #ifdef __cplusplus
+                extern "C" {
+                #endif
                 das_initialize();
                 auto printer = das_text_make_printer();
                 auto writer = das_text_make_writer();
+                #ifdef __cplusplus
+                }
+                #endif
             }
         ]]}, {configs = {languages = "c++17"}}))
     end)
