@@ -12,7 +12,7 @@ package("capstone")
 
     add_deps("cmake")
 
-    on_install("!iphoneos", function (package)
+    on_install(function (package)
         if not package:is_cross() then
             package:addenv("PATH", "bin")
         end
