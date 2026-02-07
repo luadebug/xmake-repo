@@ -1,11 +1,6 @@
-set_xmakever("2.3.4")
-set_policy("build.across_targets_in_parallel", false)
+set_xmakever("2.5.5")
 
-add_rules("mode.debug", "mode.release")
-if is_mode("release") then
-    add_cflags("-fomit-frame-pointer")
-    add_cflags("-fno-stack-protector")
-end
+set_policy("build.across_targets_in_parallel", false)
 
 option("nojit")
     set_default(false)
@@ -21,214 +16,311 @@ option("gc64")
     set_default(false)
     set_showmenu(true)
 
-rule("dasc")
-    set_extensions(".dasc")
-    before_build_file(function(target, sourcefile)
-
-        local outputdir = target:objectdir()
-        if not os.isdir(outputdir) then
-            os.mkdir(outputdir)
-        end
-        local argv = {"dynasm/dynasm.lua", "-LN"}
-        if is_arch("x64", "x86_64", "arm64", "arm64-v8a", "mips64") then
-            -- 64bits pointer
-            table.insert(argv, "-D")
-            table.insert(argv, "P64")
-        end
-        if target:opt("fpu") then
-            table.insert(argv, "-D")
-            table.insert(argv, "FPU")
-            table.insert(argv, "-D")
-            table.insert(argv, "HFABI")
-        end
-        -- jit is not supported on ios
-        if not target:opt("nojit") and not is_plat("iphoneos", "watchos") then
-            table.insert(argv, "-D")
-            table.insert(argv, "JIT")
-            table.insert(argv, "-D")
-            table.insert(argv, "FFI")
-        end
-        if is_plat("windows", "mingw") then
-            table.insert(argv, "-D")
-            table.insert(argv, "WIN")
-        end
-        table.insert(argv, "-o")
-        table.insert(argv, path.join(outputdir, "buildvm_arch.h"))
-        table.insert(argv, sourcefile)
-        os.vrunv(target:dep("minilua"):targetfile(), argv)
-        target:add("includedirs", outputdir, {public = true})
-    end)
-
-rule("buildvm")
-    before_build_files(function (target, sourcebatch)
-
-        local buildvm = target:dep("buildvm")
-        local outputdir = buildvm:objectdir()
-        if not os.isdir(outputdir) then
-            os.mkdir(outputdir)
-        end
-
-        local buildvm_bin = buildvm:targetfile()
-        local sourcefiles = sourcebatch.sourcefiles
-        os.vrunv(buildvm_bin, {"-m", "bcdef", "-o", "src/lj_bcdef.h", unpack(sourcefiles)})
-        os.vrunv(buildvm_bin, {"-m", "ffdef", "-o", "src/lj_ffdef.h", unpack(sourcefiles)})
-        os.vrunv(buildvm_bin, {"-m", "libdef", "-o", "src/lj_libdef.h", unpack(sourcefiles)})
-        os.vrunv(buildvm_bin, {"-m", "recdef", "-o", "src/lj_recdef.h", unpack(sourcefiles)})
-        os.vrunv(buildvm_bin, {"-m", "vmdef", "-o", "src/lj_vmdef.h", unpack(sourcefiles)})
-        os.vrunv(buildvm_bin, {"-m", "folddef", "-o", "src/lj_folddef.h", "src/lj_opt_fold.c"})
-        if is_plat("windows", "mingw") then
-            local lj_vm_obj = path.join(outputdir, "lj_vm.obj")
-            os.vrunv(buildvm_bin, {"-m", "peobj", "-o", lj_vm_obj})
-            table.join2(target:objectfiles(), lj_vm_obj)
-        else
-            import("core.tool.compiler")
-            local lj_vm_asm = path.join(outputdir, "lj_vm.S")
-            local lj_vm_obj = path.join(outputdir, "lj_vm.o")
-            local march
-            if is_plat("macosx", "iphoneos", "watchos") then
-                march = "machasm"
-            else
-                march = "elfasm"
-            end
-            os.vrunv(buildvm_bin, {"-m", march, "-o", lj_vm_asm})
-            compiler.compile(lj_vm_asm, lj_vm_obj, {target = target})
-            table.join2(target:objectfiles(), lj_vm_obj)
-        end
-    end)
-
-function set_host_toolchains()
-    -- only for cross-compliation
-    if is_plat(os.host()) then
-        return
-    end
-    local arch
-    if is_arch("arm64", "arm64-v8a", "mips64", "x86_64") then
-        arch = is_host("windows") and "x64" or "x86_64"
-    else
-        arch = is_host("windows") and "x86" or "i386"
-    end
-    set_plat(os.host())
-    set_arch(arch)
-end
-
+-- Host Target: minilua
 target("minilua")
     set_kind("binary")
-    set_default(false)
+    set_plat(os.host())
+    set_arch(os.arch())
     add_files("src/host/minilua.c")
-    set_host_toolchains()
     if is_host("windows") then
-        add_defines("_CRT_SECURE_NO_DEPRECATE", "_CRT_STDIO_INLINE=__declspec(dllexport)__inline")
+        add_defines("_CRT_SECURE_NO_DEPRECATE")
+    else
+        add_syslinks("m")
     end
 
-target("buildvm")
-    set_kind("binary")
-    set_default(false)
+-- Phony Target: buildvm_headers (Generate buildvm_arch.h and luajit.h)
+target("buildvm_headers")
+    set_kind("phony")
+    set_plat(os.host())
+    set_arch(os.arch())
     add_deps("minilua")
-    add_rules("dasc")
-    add_options("nojit", "fpu")
-    add_includedirs("src")
-    set_host_toolchains()
-    add_files("src/host/buildvm*.c")
-    add_defines("LUAJIT_ENABLE_LUA52COMPAT", {public = true})
-    if is_host("windows") then
-        add_defines("_CRT_SECURE_NO_DEPRECATE", "_CRT_STDIO_INLINE=__declspec(dllexport)__inline")
-    end
-    if is_arch("x86", "i386") then
-        add_files("src/vm_x86.dasc")
-        add_defines("LUAJIT_TARGET=LUAJIT_ARCH_X86", {public = true})
-    elseif is_arch("x64", "x86_64") then
-        if has_config("gc64") then
-            add_defines("LUAJIT_ENABLE_GC64", {public = true})
-            add_files("src/vm_x64.dasc")
-        else
-            -- @see https://github.com/xmake-io/xmake-repo/issues/1264
-            add_files("src/vm_x86.dasc")
+
+    on_build(function (target)
+        local minilua = target:dep("minilua"):targetfile()
+        if not path.is_absolute(minilua) then minilua = path.absolute(minilua) end
+        
+        local outputdir = target:objectdir()
+        if not path.is_absolute(outputdir) then outputdir = path.absolute(outputdir) end
+        if not os.isdir(outputdir) then os.mkdir(outputdir) end
+        
+        -- Re-calculate dasc and defines here to avoid xmake set/get dedup issues
+        local arch = get_config("arch") or os.arch()
+        local plat = get_config("plat") or os.host()
+        
+        local defines = {}
+        if plat == "windows" or plat == "mingw" then
+            table.insert(defines, "-D"); table.insert(defines, "WIN")
         end
-        add_defines("LUAJIT_TARGET=LUAJIT_ARCH_X64", {public = true})
-    elseif is_arch("arm64", "arm64-v8a") then
-        add_files("src/vm_arm64.dasc")
-        add_defines("LUAJIT_TARGET=LUAJIT_ARCH_ARM64", {public = true})
-    elseif is_arch("arm.*") then
-        add_files("src/vm_arm.dasc")
-        add_defines("LUAJIT_TARGET=LUAJIT_ARCH_ARM", {public = true})
-    elseif is_arch("mips64") then
-        add_files("src/vm_mips64.dasc")
-        add_defines("LUAJIT_TARGET=LUAJIT_ARCH_MIPS64", {public = true})
-    elseif is_arch("mips") then
-        add_files("src/vm_mips.dasc")
-        add_defines("LUAJIT_TARGET=LUAJIT_ARCH_MIPS", {public = true})
-    elseif is_arch("ppc") then
-        add_files("src/vm_ppc.dasc")
-        add_defines("LUAJIT_TARGET=LUAJIT_ARCH_PPC", {public = true})
-    end
-    if is_plat("macosx", "iphoneos", "watchos") then
-        add_defines("LUAJIT_OS=LUAJIT_OS_OSX", {public = true})
-    elseif is_plat("windows") then
-        add_defines("LUAJIT_OS=LUAJIT_OS_WINDOWS", {public = true})
-    elseif is_plat("linux", "android") then
-        add_defines("LUAJIT_OS=LUAJIT_OS_LINUX", {public = true})
-    elseif is_plat("bsd") then
-        add_defines("LUAJIT_OS=LUAJIT_OS_BSD", {public = true})
-    else
-        add_defines("LUAJIT_OS=LUAJIT_OS_OTHER", {public = true})
-    end
-    before_build("@windows", "@msys", "@cygwin", function (target)
-        if not is_arch("x86", "x64", "mips", "mips64") then
-            -- @note we need fix `illegal zero-sized array` errors for msvc
-            io.gsub("src/lj_jit.h", "  LJ_K32__MAX\n", "  LJ_K32__MAX=1\n")
-            io.gsub("src/lj_jit.h", "  LJ_K64__MAX,\n", "  LJ_K64__MAX=1\n")
+
+        local dasc = "src/vm_x86.dasc"
+        if arch == "x64" or arch == "x86_64" then
+             dasc = "src/vm_x64.dasc"
+             table.insert(defines, "-D"); table.insert(defines, "P64")
+             if has_config("gc64") then
+                 table.insert(defines, "-D"); table.insert(defines, "JIT")
+                 table.insert(defines, "-D"); table.insert(defines, "FFI")
+             elseif os.arch() == "x64" or os.arch() == "x86_64" then
+                 -- for x64 host/target, defaults usually enable JIT
+             end
+        elseif arch == "arm64" or arch == "arm64-v8a" then
+             dasc = "src/vm_arm64.dasc"
+             table.insert(defines, "-D"); table.insert(defines, "P64")
+             table.insert(defines, "-D"); table.insert(defines, "FPU")
+             if plat == "windows" or plat == "mingw" then
+                 table.insert(defines, "-D"); table.insert(defines, "ENDIAN_LE")
+             end
+        elseif arch:match("^arm") then
+             dasc = "src/vm_arm.dasc"
+             if target:opt("fpu") then
+                 table.insert(defines, "-D"); table.insert(defines, "FPU")
+                 table.insert(defines, "-D"); table.insert(defines, "HFABI")
+             end
+        elseif arch == "mips64" then
+             dasc = "src/vm_mips64.dasc"
+             table.insert(defines, "-D"); table.insert(defines, "P64")
+        elseif arch == "mips" then
+             dasc = "src/vm_mips.dasc"
+        elseif arch == "ppc" then
+             dasc = "src/vm_ppc.dasc"
+        end
+        
+        if not target:opt("nojit") and not (plat == "iphoneos" or plat == "watchos") then
+            table.insert(defines, "-D"); table.insert(defines, "JIT")
+            table.insert(defines, "-D"); table.insert(defines, "FFI")
+        end
+        
+        local buildvm_arch_h = path.join(outputdir, "buildvm_arch.h")
+        local flags = {"dynasm/dynasm.lua", "-LN"}
+        for _, d in ipairs(defines) do table.insert(flags, d) end
+        table.insert(flags, "-o")
+        table.insert(flags, buildvm_arch_h)
+        table.insert(flags, dasc)
+        
+        print("xmake-repo: generating buildvm_arch.h to " .. buildvm_arch_h .. " using " .. dasc)
+        os.vrunv(minilua, flags)
+
+        
+        if not os.isfile(buildvm_arch_h) then
+            print("xmake-repo: Error: buildvm_arch.h was not generated!")
+            raise("Failed to generate buildvm_arch.h")
+        end
+        
+        if os.isfile("src/host/genversion.lua") then
+            print("xmake-repo: generating luajit.h...")
+            local luajit_h = path.join(outputdir, "luajit.h")
+            if not path.is_absolute(luajit_h) then luajit_h = path.absolute(luajit_h) end
+            local olddir = os.cd("src")
+            
+            if not os.isfile("luajit_relver.txt") then
+                local version
+                if os.isdir("../.git") then
+                    try { function ()
+                        version = os.iorunv("git", {"show", "-s", "--format=%ct"})
+                    end }
+                end
+                if version then
+                    version = version:match("^%s*(.-)%s*$")
+                end
+                if not version and os.isfile("../.relver") then
+                    version = io.readfile("../.relver"):match("^%s*(.-)%s*$")
+                end
+                if not version then
+                    version = os.time()
+                end
+                io.writefile("luajit_relver.txt", "" .. version)
+            end
+
+            os.vrunv(path.absolute(minilua, olddir), {"host/genversion.lua", "luajit_rolling.h", "luajit_relver.txt", luajit_h})
+            os.cd(olddir)
         end
     end)
 
+-- Host Target: buildvm
+target("buildvm")
+    set_kind("binary")
+    set_plat(os.host())
+    set_arch(os.arch())
+    add_deps("minilua", "buildvm_headers")
+    add_files("src/host/buildvm*.c")
+    
+    if is_host("windows") then
+        add_defines("_CRT_SECURE_NO_DEPRECATE")
+    else
+        add_syslinks("m", "dl")
+    end
+    
+    on_load(function (target)
+        local arch = get_config("arch") or os.arch()
+        if arch == "x64" or arch == "x86_64" then
+            target:add("defines", "LUAJIT_TARGET=LUAJIT_ARCH_X64")
+        elseif arch == "x86" or arch == "i386" then
+            target:add("defines", "LUAJIT_TARGET=LUAJIT_ARCH_X86")
+        elseif arch == "arm64" or arch == "arm64-v8a" then
+            target:add("defines", "LUAJIT_TARGET=LUAJIT_ARCH_ARM64")
+        elseif arch:match("^arm") then
+            target:add("defines", "LUAJIT_TARGET=LUAJIT_ARCH_ARM")
+        elseif arch == "mips64" then
+             target:add("defines", "LUAJIT_TARGET=LUAJIT_ARCH_MIPS64")
+        elseif arch == "mips" then
+             target:add("defines", "LUAJIT_TARGET=LUAJIT_ARCH_MIPS")
+        elseif arch == "ppc" then
+             target:add("defines", "LUAJIT_TARGET=LUAJIT_ARCH_PPC")
+        end
+        
+        local plat = get_config("plat") or os.host()
+        if plat == "macosx" or plat == "iphoneos" or plat == "watchos" then
+            target:add("defines", "LUAJIT_OS=LUAJIT_OS_OSX")
+        elseif plat == "windows" or plat == "mingw" then
+            target:add("defines", "LUAJIT_OS=LUAJIT_OS_WINDOWS")
+        elseif plat == "linux" then
+            target:add("defines", "LUAJIT_OS=LUAJIT_OS_LINUX")
+        else
+            target:add("defines", "LUAJIT_OS=LUAJIT_OS_OTHER")
+        end
+        
+        target:add("includedirs", "src")
+    end)
+
+    after_load(function (target)
+        -- Add buildvm_headers include dir
+        local htag = target:dep("buildvm_headers")
+        if htag then
+             target:add("includedirs", path.absolute(htag:objectdir()))
+        end
+    end)
+
+-- Phony Target: Generate LuaJIT Headers (using buildvm)
+target("luajit_headers")
+    set_kind("phony")
+    add_deps("buildvm")
+    
+    on_build(function (target)
+        local buildvm = target:dep("buildvm"):targetfile()
+        if not path.is_absolute(buildvm) then buildvm = path.absolute(buildvm) end
+        
+        local outputdir = target:objectdir()
+        if not os.isdir(outputdir) then os.mkdir(outputdir) end
+        
+        print("xmake-repo: generating luajit headers with " .. buildvm)
+        local headers = {"bcdef", "ffdef", "libdef", "recdef", "vmdef"}
+        for _, m in ipairs(headers) do
+             os.vrunv(buildvm, {"-m", m, "-o", path.join(outputdir, "lj_"..m..".h"), "src/lib_base.c", "src/lib_math.c", "src/lib_bit.c", "src/lib_string.c", "src/lib_table.c", "src/lib_io.c", "src/lib_os.c", "src/lib_package.c", "src/lib_debug.c", "src/lib_jit.c", "src/lib_ffi.c", "src/lib_buffer.c"})
+        end
+        
+        -- lj_folddef.h
+        os.vrunv(buildvm, {"-m", "folddef", "-o", path.join(outputdir, "lj_folddef.h"), "src/lj_opt_fold.c"})
+
+        -- Generate VM assembly/obj
+        local plat = get_config("plat") or os.host()
+        if plat == "windows" or plat == "mingw" then
+            local lj_vm_obj = path.join(outputdir, "lj_vm.obj")
+            os.vrunv(buildvm, {"-m", "peobj", "-o", lj_vm_obj})
+        else
+             local lj_vm_asm = path.join(outputdir, "lj_vm.S")
+             local mode = "elfasm"
+             if plat == "macosx" or plat == "iphoneos" then mode = "machasm" end
+             os.vrunv(buildvm, {"-m", mode, "-o", lj_vm_asm})
+        end
+    end)
+
+
+-- Main Target: luajit
 target("luajit")
     set_kind("$(kind)")
-    add_deps("buildvm")
-    add_options("nojit", "fpu")
-    if is_mode("debug") then
-        add_defines("LUA_USE_ASSERT")
-    end
-    if is_kind("shared") and is_plat("windows") then
-        add_defines("LUA_BUILD_AS_DLL")
-    end
-    add_defines("LUAJIT_ENABLE_LUA52COMPAT", {public = true})
-    add_defines("_FILE_OFFSET_BITS=64", "LARGEFILE_SOURCE", {public = true})
-    add_undefines("_FORTIFY_SOURCE", {public = true})
-    add_headerfiles("src/*.h", {prefixdir = "luajit"})
-    add_headerfiles("src/lua.hpp", {prefixdir = "luajit"})
-    add_files("src/ljamalg.c")
-    add_files("src/lib_base.c",
-              "src/lib_math.c",
-              "src/lib_bit.c",
-              "src/lib_string.c",
-              "src/lib_table.c",
-              "src/lib_io.c",
-              "src/lib_os.c",
-              "src/lib_package.c",
-              "src/lib_debug.c",
-              "src/lib_jit.c",
-              "src/lib_ffi.c",
-              "src/lib_buffer.c", {rules = {"buildvm", override = true}})
-
-target("luajit_bin")
-    set_kind("binary")
-    add_deps("luajit")
+    add_deps("luajit_headers", "buildvm_headers")
+    set_policy("build.fence", true)
     set_basename("luajit")
-    add_files("src/luajit.c")
-    add_options("nojit", "fpu")
-    if is_plat("windows") then
-        add_syslinks("advapi32", "shell32")
-        if is_arch("x86") then
-            add_ldflags("/subsystem:console,5.01")
-        else
-            add_ldflags("/subsystem:console,5.02")
+    
+    on_load(function (target)
+        local arch = get_config("arch") or os.arch()
+        if arch == "x64" or arch == "x86_64" then
+            target:add("defines", "LUAJIT_TARGET=LUAJIT_ARCH_X64")
+        elseif arch == "x86" or arch == "i386" then
+            target:add("defines", "LUAJIT_TARGET=LUAJIT_ARCH_X86")
+        elseif arch == "arm64" or arch == "arm64-v8a" then
+            target:add("defines", "LUAJIT_TARGET=LUAJIT_ARCH_ARM64")
+        elseif arch:match("^arm") then
+            target:add("defines", "LUAJIT_TARGET=LUAJIT_ARCH_ARM")
+        elseif arch == "mips64" then
+             target:add("defines", "LUAJIT_TARGET=LUAJIT_ARCH_MIPS64")
+        elseif arch == "mips" then
+             target:add("defines", "LUAJIT_TARGET=LUAJIT_ARCH_MIPS")
+        elseif arch == "ppc" then
+             target:add("defines", "LUAJIT_TARGET=LUAJIT_ARCH_PPC")
         end
-    elseif is_plat("android") then
-        add_syslinks("m", "c")
-    elseif is_plat("macosx") then
-        add_ldflags("-all_load", "-pagezero_size 10000", "-image_base 100000000")
-    elseif is_plat("mingw") then
-        add_ldflags("-static-libgcc", {force = true})
-    else
-        add_syslinks("pthread", "dl", "m", "c")
+        
+        local plat = get_config("plat") or os.host()
+        if plat == "macosx" or plat == "iphoneos" or plat == "watchos" then
+            target:add("defines", "LUAJIT_OS=LUAJIT_OS_OSX")
+        elseif plat == "windows" or plat == "mingw" then
+            target:add("defines", "LUAJIT_OS=LUAJIT_OS_WINDOWS")
+        elseif plat == "linux" then
+            target:add("defines", "LUAJIT_OS=LUAJIT_OS_LINUX")
+        else
+            target:add("defines", "LUAJIT_OS=LUAJIT_OS_OTHER")
+        end
+    end)
+
+    add_options("nojit", "fpu")
+    add_defines("LUAJIT_ENABLE_LUA52COMPAT")
+    
+    if is_plat("windows") then 
+        add_defines("_CRT_SECURE_NO_DEPRECATE", "_CRT_STDIO_INLINE=__declspec(dllexport)__inline")
+        add_defines("LUA_BUILD_AS_DLL")
+        if is_arch("arm64") then
+             add_defines("LUAJIT_ENABLE_GC64")
+        end
     end
+
+    add_includedirs("src")
+    add_headerfiles("src/lua.h", "src/lualib.h", "src/lauxlib.h", "src/luaconf.h", "src/lua.hpp", {prefix = "luajit"})
+    add_files("src/ljamalg.c")
+
+    if is_plat("linux", "macosx") and is_arch("x86_64", "mips64") then
+        add_defines("LUAJIT_UNWIND_EXTERNAL")
+    end
+    
+    after_install(function (target)
+        local htag = target:dep("buildvm_headers")
+        local hdir = htag:objectdir()
+        local luajit_h = path.join(hdir, "luajit.h")
+        if os.isfile(luajit_h) then
+             os.cp(luajit_h, path.join(target:installdir(), "include", "luajit", "luajit.h"))
+        end
+    end)
+
+    before_build(function (target)
+        import("core.tool.compiler")
+        local htag = target:dep("luajit_headers")
+        local hdir = htag:objectdir()
+        
+        if not target:is_plat("windows", "mingw") then
+            local vm_s = path.join(hdir, "lj_vm.S")
+            local vm_o = path.join(hdir, "lj_vm.o")
+            
+            if os.isfile(vm_s) then
+                print("xmake-repo: compiling " .. vm_s .. " to " .. vm_o)
+                -- Force -fPIC for the assembly file to ensure it works in shared libs
+                compiler.compile(vm_s, vm_o, {target = target, asflags = "-fPIC"})
+                table.insert(target:objectfiles(), vm_o)
+            else
+                print("xmake-repo: warning: " .. vm_s .. " not found during before_build!")
+            end
+        else
+            local vm_o = path.join(hdir, "lj_vm.obj")
+            if os.isfile(vm_o) then
+                table.insert(target:objectfiles(), vm_o)
+            end
+        end
+    end)
+
+    after_load(function (target)
+        local htag = target:dep("luajit_headers")
+        local hdir = htag:objectdir()
+        target:add("includedirs", path.absolute(hdir))
+
+        local bhtag = target:dep("buildvm_headers")
+        local bhdir = bhtag:objectdir()
+        target:add("includedirs", path.absolute(bhdir))
+    end)
 
