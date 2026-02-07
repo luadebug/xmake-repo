@@ -29,8 +29,6 @@ package("luajit")
                 else
                     if package:is_plat("iphoneos") then
                         raise("package(luajit): iphoneos is not supported")
-                    elseif package:is_plat("android") and package:is_arch("arm.*") and package:check_sizeof("void*") == "4" then
-                        raise("package(luajit/armeabi-v7a): unsupported arch for android OS")
                     end
                 end
             end
@@ -49,9 +47,6 @@ package("luajit")
         configs.fpu     = package:config("fpu")
         configs.nojit   = package:config("nojit")
         configs.gc64    = package:config("gc64")
-        if package:is_plat("windows") and package:is_arch("arm64") then
-            configs.gc64 = true
-        end
         if package:is_plat("macosx") and not is_arch("arm.*") then
             configs.gc64 = true
         end
