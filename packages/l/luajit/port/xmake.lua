@@ -140,7 +140,7 @@ target("buildvm")
     set_kind("binary")
     set_plat(os.host())
     local arch = get_config("arch")
-    if arch == "x86" or arch == "i386" or arch:match("^arm") then
+    if arch == "x86" or arch == "i386" or (arch:match("^arm") and arch ~= "arm64" and arch ~= "arm64-v8a") then
         set_arch("x86")
     else
         set_arch(os.arch())
