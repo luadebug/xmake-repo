@@ -20,7 +20,12 @@ option("gc64")
 target("minilua")
     set_kind("binary")
     set_plat(os.host())
-    set_arch(os.arch())
+    local arch = get_config("arch")
+    if arch and (arch == "x86" or arch == "i386" or arch == "mips" or (arch:match("^arm") and not arch:match("64"))) then
+        set_arch("x86")
+    else
+        set_arch(os.arch())
+    end
     add_files("src/host/minilua.c")
     if is_host("windows") then
         add_defines("_CRT_SECURE_NO_DEPRECATE")
@@ -140,7 +145,7 @@ target("buildvm")
     set_kind("binary")
     set_plat(os.host())
     local arch = get_config("arch")
-    if arch and (arch == "x86" or arch == "i386") then
+    if arch and (arch == "x86" or arch == "i386" or arch == "mips" or (arch:match("^arm") and not arch:match("64"))) then
         set_arch("x86")
     else
         set_arch(os.arch())
@@ -165,14 +170,6 @@ target("buildvm")
             target:add("defines", "LUAJIT_TARGET=LUAJIT_ARCH_ARM64")
         elseif arch:match("^arm") then
             target:add("defines", "LUAJIT_TARGET=LUAJIT_ARCH_ARM")
-            if get_config("fpu") ~= false then
-                target:add("defines", "LJ_ARCH_HASFPU=1", "LJ_ABI_SOFTFP=0")
-            else
-                target:add("defines", "LJ_ABI_SOFTFP=1")
-            end
-            if is_host("windows") then
-                target:add("defines", "LUAJIT_NO_UNWIND")
-            end
         elseif arch == "mips64" then
              target:add("defines", "LUAJIT_TARGET=LUAJIT_ARCH_MIPS64")
         elseif arch == "mips" then
