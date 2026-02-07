@@ -177,7 +177,7 @@ target("buildvm")
             target:add("defines", "LUAJIT_OS=LUAJIT_OS_OSX")
         elseif plat == "windows" or plat == "mingw" then
             target:add("defines", "LUAJIT_OS=LUAJIT_OS_WINDOWS")
-        elseif plat == "linux" then
+        elseif plat == "linux" or plat == "android" then
             target:add("defines", "LUAJIT_OS=LUAJIT_OS_LINUX")
         elseif plat == "bsd" then
             target:add("defines", "LUAJIT_OS=LUAJIT_OS_BSD")
@@ -261,7 +261,7 @@ target("luajit")
             target:add("defines", "LUAJIT_OS=LUAJIT_OS_OSX")
         elseif plat == "windows" or plat == "mingw" then
             target:add("defines", "LUAJIT_OS=LUAJIT_OS_WINDOWS")
-        elseif plat == "linux" then
+        elseif plat == "linux" or plat == "android" then
             target:add("defines", "LUAJIT_OS=LUAJIT_OS_LINUX")
         elseif plat == "bsd" then
             target:add("defines", "LUAJIT_OS=LUAJIT_OS_BSD")
@@ -341,9 +341,9 @@ target("luajit_bin")
     set_basename("luajit")
     add_deps("luajit")
     add_files("src/luajit.c")
-    if is_plat("linux", "bsd") then
+    if is_plat("linux", "bsd", "android") then
         add_syslinks("m")
-        if is_plat("linux") then
+        if is_plat("linux", "android") then
             add_syslinks("dl")
         end
         add_ldflags("-Wl,-E")
