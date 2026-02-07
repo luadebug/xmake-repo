@@ -8,7 +8,7 @@ package("luajit")
     add_versions("v2.1.0-20260109", "707c12bf00dafdfd3899b1a6c36435dbbf6c7022")
     --add_versions("v2.1.0-beta3", "8271c643c21d1b2f344e339f559f2de6f3663191")
 
-    add_patches("v2.1.0-20260109", "patches/v2.1.0-20260109/fix-bsd.patch", "9a23c44a25a317d422e6f1337a773f401e73973bf9458f082e51031b763411fc")
+    add_patches("v2.1.0-20260109", "patches/v2.1.0-20260109/fix-bsd.patch", "e60b6f1ddeaaf503123c025433d1906b3bd3cefbd0237c9170f33a3d535ffb05")
 
     add_configs("nojit", { description = "Disable JIT.", default = false, type = "boolean"})
     add_configs("fpu",   { description = "Enable FPU.", default = true, type = "boolean"})
