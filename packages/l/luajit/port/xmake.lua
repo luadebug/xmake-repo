@@ -153,6 +153,7 @@ target("buildvm")
     else
         add_syslinks("m", "dl")
     end
+    add_options("nojit", "fpu")
     
     on_load(function (target)
         local arch = get_config("arch") or os.arch()
