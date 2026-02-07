@@ -165,6 +165,9 @@ target("buildvm")
             target:add("defines", "LUAJIT_TARGET=LUAJIT_ARCH_ARM64")
         elseif arch:match("^arm") then
             target:add("defines", "LUAJIT_TARGET=LUAJIT_ARCH_ARM")
+            if target:config("fpu") then
+                target:add("defines", "LJ_ARCH_HASFPU=1", "LJ_ABI_SOFTFP=0")
+            end
         elseif arch == "mips64" then
              target:add("defines", "LUAJIT_TARGET=LUAJIT_ARCH_MIPS64")
         elseif arch == "mips" then
