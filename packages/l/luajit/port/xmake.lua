@@ -259,14 +259,17 @@ target("luajit")
         else
             target:add("defines", "LUAJIT_OS=LUAJIT_OS_OTHER")
         end
+        
+        if target:is_plat("windows") and target:kind() == "shared" then
+            target:add("defines", "LUA_BUILD_AS_DLL", "_CRT_STDIO_INLINE=__declspec(dllexport)__inline")
+        end
     end)
 
     add_options("nojit", "fpu")
     add_defines("LUAJIT_ENABLE_LUA52COMPAT")
     
     if is_plat("windows") then 
-        add_defines("_CRT_SECURE_NO_DEPRECATE", "_CRT_STDIO_INLINE=__declspec(dllexport)__inline")
-        add_defines("LUA_BUILD_AS_DLL")
+        add_defines("_CRT_SECURE_NO_DEPRECATE")
         if is_arch("arm64") then
              add_defines("LUAJIT_ENABLE_GC64")
         end
