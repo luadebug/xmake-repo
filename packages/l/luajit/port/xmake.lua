@@ -53,7 +53,7 @@ target("buildvm_headers")
         end
 
         local dasc = "src/vm_x86.dasc"
-        if arch == "x64" or arch == "x86_64" then
+        if arch and (arch == "x64" or arch == "x86_64") then
              dasc = "src/vm_x64.dasc"
              table.insert(defines, "-D"); table.insert(defines, "P64")
              if has_config("gc64") then
@@ -62,25 +62,25 @@ target("buildvm_headers")
              elseif os.arch() == "x64" or os.arch() == "x86_64" then
                  -- for x64 host/target, defaults usually enable JIT
              end
-        elseif arch == "arm64" or arch == "arm64-v8a" then
+        elseif arch and (arch == "arm64" or arch == "arm64-v8a") then
              dasc = "src/vm_arm64.dasc"
              table.insert(defines, "-D"); table.insert(defines, "P64")
              table.insert(defines, "-D"); table.insert(defines, "FPU")
              if plat == "windows" or plat == "mingw" then
                  table.insert(defines, "-D"); table.insert(defines, "ENDIAN_LE")
              end
-        elseif arch:match("^arm") then
+        elseif arch and arch:match("^arm") then
              dasc = "src/vm_arm.dasc"
              if target:opt("fpu") then
                  table.insert(defines, "-D"); table.insert(defines, "FPU")
                  table.insert(defines, "-D"); table.insert(defines, "HFABI")
              end
-        elseif arch == "mips64" then
+        elseif arch and arch == "mips64" then
              dasc = "src/vm_mips64.dasc"
              table.insert(defines, "-D"); table.insert(defines, "P64")
-        elseif arch == "mips" then
+        elseif arch and arch == "mips" then
              dasc = "src/vm_mips.dasc"
-        elseif arch == "ppc" then
+        elseif arch and arch == "ppc" then
              dasc = "src/vm_ppc.dasc"
         end
         
@@ -140,7 +140,7 @@ target("buildvm")
     set_kind("binary")
     set_plat(os.host())
     local arch = get_config("arch")
-    if arch == "x86" or arch == "i386" or (arch:match("^arm") and arch ~= "arm64" and arch ~= "arm64-v8a") then
+    if arch and (arch == "x86" or arch == "i386" or (arch:match("^arm") and arch ~= "arm64" and arch ~= "arm64-v8a")) then
         set_arch("x86")
     else
         set_arch(os.arch())
