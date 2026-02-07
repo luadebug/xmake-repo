@@ -324,3 +324,25 @@ target("luajit")
         target:add("includedirs", path.absolute(bhdir))
     end)
 
+target("luajit_bin")
+    set_kind("binary")
+    set_basename("luajit")
+    add_deps("luajit")
+    add_files("src/luajit.c")
+    if is_plat("linux") then
+        add_syslinks("dl", "m")
+    end
+    after_load(function (target)
+        local lib = target:dep("luajit")
+        -- Add includedirs from headers target
+        local htag = lib:dep("luajit_headers")
+        local hdir = htag:objectdir()
+        target:add("includedirs", path.absolute(hdir))
+        
+        local bhtag = lib:dep("buildvm_headers")
+        local bhdir = bhtag:objectdir()
+        target:add("includedirs", path.absolute(bhdir))
+        
+        target:add("includedirs", "src")
+    end)
+
