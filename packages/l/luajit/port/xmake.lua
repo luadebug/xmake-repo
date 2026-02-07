@@ -288,7 +288,7 @@ target("luajit")
     add_headerfiles("src/lua.h", "src/lualib.h", "src/lauxlib.h", "src/luaconf.h", "src/lua.hpp", {prefix = "luajit"})
     add_files("src/ljamalg.c")
 
-    if is_plat("linux", "macosx") and is_arch("x86_64", "mips64") then
+    if is_plat("linux", "macosx", "bsd") and is_arch("x86_64", "mips64") then
         add_defines("LUAJIT_UNWIND_EXTERNAL")
     end
     
