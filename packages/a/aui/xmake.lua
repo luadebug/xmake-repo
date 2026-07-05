@@ -72,7 +72,7 @@ package("aui")
         package:add("includedirs", "aui.audio/include")
         component:add("links", "aui.audio")
         package:add("deps", "libopus", "soxr")
-        if package:is_plat("linux") then
+        if package:is_plat("linux", "bsd") then
             package:add("deps", "pulseaudio")
         elseif package:is_plat("android") then
             package:add("deps", "oboe")
@@ -92,7 +92,7 @@ package("aui")
         component:add("links", "aui.core")
         package:add("deps", "fmt 9.1.0", "range-v3")
         package:add("deps", "glm", {configs = {header_only = false}})
-        if package:is_plat("linux") then
+        if package:is_plat("linux", "bsd") then
             package:add("deps", "libbacktrace")
             component:add("syslinks", "pthread", "dl")
         elseif package:is_plat("windows", "mingw") then
@@ -154,7 +154,7 @@ package("aui")
         if package:is_plat("windows", "mingw", "linux", "macosx") then
             package:add("deps", "glew")
         end
-        if package:is_plat("linux") then
+        if package:is_plat("linux", "bsd") then
             package:add("deps", "libx11", "dbus", "gtk3", "fontconfig")
         end
         if package:is_plat("windows", "mingw") then
@@ -224,6 +224,7 @@ package("aui")
         local platform_map = {
             windows  = { AUI_PLATFORM_WIN = 1 },
             linux    = { AUI_PLATFORM_LINUX = 1,    AUI_PLATFORM_UNIX = 1 },
+            bsd      = { AUI_PLATFORM_LINUX = 1,      AUI_PLATFORM_UNIX = 1 },
             macosx   = { AUI_PLATFORM_APPLE = 1,    AUI_PLATFORM_MACOS = 1, AUI_PLATFORM_UNIX = 1 },
             android  = { AUI_PLATFORM_ANDROID = 1,  AUI_PLATFORM_UNIX = 1 },
             iphoneos = { AUI_PLATFORM_APPLE = 1,    AUI_PLATFORM_IOS = 1,   AUI_PLATFORM_UNIX = 1 },
@@ -290,7 +291,7 @@ package("aui")
         end
     end)
 
-    on_install("windows", "macosx", "linux", "android", "iphoneos", "wasm", function (package)
+    on_install("windows", "macosx", "linux", "bsd", "android", "iphoneos", "wasm", function (package)
         local configs = {
             "-DAUI_INSTALL_RUNTIME_DEPENDENCIES=OFF",
             "-DAUIB_NO_PRECOMPILED=TRUE",
@@ -342,7 +343,7 @@ package("aui")
         -- gdk-pixbuf-2.0.pc has Requires.private: shared-mime-info when gio_sniffing=true.
         -- shared-mime-info is a binary package so it's not in PKG_CONFIG_PATH, causing
         -- pkg_check_modules(GTK3) to fail. Add it manually.
-        if is_host("linux") then
+        if is_host("linux", "bsd") then
             local envs = cmake.buildenvs(package, opt)
             local pc_path = path.splitenv(envs.PKG_CONFIG_PATH or "")
             -- Setting PKG_CONFIG_PATH overrides pkg-config's built-in default paths,

@@ -14,9 +14,17 @@ package("at-spi2-core")
     add_links("atk-bridge-2.0", "atspi", "atk-1.0")
 
     add_deps("meson", "ninja", "pkg-config")
-    add_deps("glib", "dbus", "libx11", "libxtst", "libxi", "libxml2")
+    add_deps("glib", "dbus", "libxml2")
+    if is_plat("bsd") then
+        -- FreeBSD's /usr/local X11 is detected by xmake as a usable system package but
+        -- often ships without the dev headers (e.g. X11/XKBlib.h); build our own so the
+        -- atspi device-legacy backend's <X11/*.h> includes actually resolve
+        add_deps("libx11", "libxtst", "libxi", {system = false})
+    else
+        add_deps("libx11", "libxtst", "libxi")
+    end
 
-    on_install("linux", function (package)
+    on_install("linux", "bsd", function (package)
         local configs = {}
         table.insert(configs, "-Ddefault_library=" .. (package:config("shared") and "shared" or "static"))
         import("package.tools.meson").install(package, configs, {packagedeps = {"glib", "libiconv", "libx11", "libxtst", "libxi", "libxext", "dbus"}})
