@@ -25,21 +25,9 @@ package("libx11")
     add_configs("shared", {description = "Build shared library.", default = true, type = "boolean"})
 
     on_load(function (package)
-        -- FreeBSD's /usr/local often carries stale X11 .pc files without the matching
-        -- headers/sources (e.g. X11/Xtrans/transport.c), which xmake accepts as system;
-        -- build these from source on bsd so libx11's own build can find them.
-        local xcb_configs = {configs = {shared = package:config("shared")}}
-        if package:is_plat("bsd") then
-            xcb_configs.system = false
-        end
-        package:add("deps", "libxcb", xcb_configs)
+        package:add("deps", "libxcb", { configs = { shared = package:config("shared") } })
         if package:is_plat("macosx", "linux", "bsd", "cross") then
-            package:add("deps", "pkg-config", "util-macros", "xorgproto")
-            if package:is_plat("bsd") then
-                package:add("deps", "xtrans", {system = false})
-            else
-                package:add("deps", "xtrans")
-            end
+            package:add("deps", "pkg-config", "util-macros", "xtrans", "xorgproto")
         end
         if package:is_plat("macosx") then
             -- fix sed: RE error: illegal byte sequence
