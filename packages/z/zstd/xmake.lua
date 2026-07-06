@@ -23,6 +23,10 @@ package("zstd")
         add_syslinks("pthread")
     end
 
+    if is_plat("bsd") then
+        add_extsources("pkgconfig::libzstd")
+    end
+
     on_load(function (package)
         -- Some downstream cmake package need patch: find_package(zstd CONFIG REQUIRED)
         -- https://github.com/facebook/zstd/issues/3271
