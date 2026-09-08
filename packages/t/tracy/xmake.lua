@@ -1,10 +1,14 @@
 package("tracy")
     set_homepage("https://github.com/wolfpld/tracy")
     set_description("C++ frame profiler")
+    set_license("BSD-3-Clause")
 
     add_urls("https://github.com/wolfpld/tracy/archive/refs/tags/$(version).tar.gz",
              "https://github.com/wolfpld/tracy.git")
 
+    add_versions("v0.13.1", "d4efc50ebcb0bfcfdbba148995aeb75044c0d80f5d91223aebfaa8fa9e563d2b")
+    add_versions("v0.13.0", "b0e972dfeebe42470187c1a47b449c8ee9e8656900bcf87b403175ed50796918")
+    add_versions("v0.12.2", "09617765ba5ff1aa6da128d9ba3c608166c5ef05ac28e2bb77f791269d444952")
     add_versions("v0.12.1", "03580b01df3c435f74eec165193d6557cdbf3a84d39582ca30969ef5354560aa")
     add_versions("v0.12.0", "ce2fb5b89aeb6db8401d7efe1bfe8393b7a81ca551273e8c6dd46ed37c02a040")
     add_versions("v0.11.1", "2c11ca816f2b756be2730f86b0092920419f3dabc7a7173829ffd897d91888a1")
@@ -14,24 +18,26 @@ package("tracy")
     add_versions("v0.9", "93a91544e3d88f3bc4c405bad3dbc916ba951cdaadd5fcec1139af6fa56e6bfc")
     add_versions("v0.8.2", "4784eddd89c17a5fa030d408392992b3da3c503c872800e9d3746d985cfcc92a")
 
+    add_patches("v0.13.1", "https://github.com/wolfpld/tracy/commit/d79b6d040efaef3010c1e38bda616483bba10561.patch", "44314be366088cd16954eb5df8adae0b49e44df0d7b0371936291c25c96c4775")
+
     add_configs("cmake",                            {description = "Use cmake buildsystem", default = true, type = "boolean"})
 
     add_configs("tracy_enable",                     {type = "boolean", default = true,  description = "Enable profiling"})
     add_configs("on_demand",                        {type = "boolean", default = false, description = "On-demand profiling"})
-    add_configs("enforce_callstack",                {type = "boolean", default = false, description = "Enfore callstack collection for tracy regions"})
-    add_configs("callstack",                        {type = "boolean", default = false, description = "Enable all callstack related functionality"})
+    add_configs("enforce_callstack",                {type = "boolean", default = true,  description = "Enfore callstack collection for tracy regions"})
+    add_configs("callstack",                        {type = "boolean", default = true,  description = "Enable all callstack related functionality"})
     add_configs("callstack_inlines",                {type = "boolean", default = false, description = "Enable the inline functions in callstacks"})
     add_configs("only_localhost",                   {type = "boolean", default = false, description = "Only listen on the localhost interface"})
-    add_configs("broadcast",                        {type = "boolean", default = false, description = "Enable client discovery by broadcast to local network"})
+    add_configs("broadcast",                        {type = "boolean", default = true,  description = "Enable client discovery by broadcast to local network"})
     add_configs("only_ipv4",                        {type = "boolean", default = false, description = "Tracy will only accept connections on IPv4 addresses (disable IPv6)"})
-    add_configs("code_transfer",                    {type = "boolean", default = false, description = "Enable collection of source code"})
-    add_configs("context_switch",                   {type = "boolean", default = false, description = "Enable capture of context switches"})
-    add_configs("exit",                             {type = "boolean", default = false, description = "Client executable does not exit until all profile data is sent to server"})
-    add_configs("sampling",                         {type = "boolean", default = false, description = "Enable call stack sampling"})
-    add_configs("verify",                           {type = "boolean", default = false, description = "Enable zone validation for C API"})
-    add_configs("vsync_capture",                    {type = "boolean", default = false, description = "Enable capture of hardware Vsync events"})
-    add_configs("frame_image",                      {type = "boolean", default = false, description = "Enable the frame image support and its thread"})
-    add_configs("system_tracing",                   {type = "boolean", default = false, description = "Enable systrace sampling"})
+    add_configs("code_transfer",                    {type = "boolean", default = true,  description = "Enable collection of source code"})
+    add_configs("context_switch",                   {type = "boolean", default = true,  description = "Enable capture of context switches"})
+    add_configs("exit",                             {type = "boolean", default = true,  description = "Client executable will exit even if some profile data is not sent to server"})
+    add_configs("sampling",                         {type = "boolean", default = true,  description = "Enable call stack sampling"})
+    add_configs("verify",                           {type = "boolean", default = true,  description = "Enable zone validation for C API"})
+    add_configs("vsync_capture",                    {type = "boolean", default = true,  description = "Enable capture of hardware Vsync events"})
+    add_configs("frame_image",                      {type = "boolean", default = true,  description = "Enable the frame image support and its thread"})
+    add_configs("system_tracing",                   {type = "boolean", default = true,  description = "Enable systrace sampling"})
     add_configs("patchable_nopsleds",               {type = "boolean", default = false, description = "Enable nopsleds for efficient patching by system-level tools (e.g. rr)"})
     add_configs("timer_fallback",                   {type = "boolean", default = false, description = "Use lower resolution timers"})
     add_configs("libunwind_backtrace",              {type = "boolean", default = false, description = "Use libunwind backtracing where supported"})
@@ -40,7 +46,7 @@ package("tracy")
     add_configs("delayed_init",                     {type = "boolean", default = false, description = "Enable delayed initialization of the library (init on first call)"})
     add_configs("manual_lifetime",                  {type = "boolean", default = false, description = "Enable the manual lifetime management of the profile"})
     add_configs("fibers",                           {type = "boolean", default = true,  description = "Enable fibers support"})
-    add_configs("crash_handler",                    {type = "boolean", default = false, description = "Enable crash handling"})
+    add_configs("crash_handler",                    {type = "boolean", default = true,  description = "Enable crash handling"})
     add_configs("verb",                             {type = "boolean", default = false, description = "Enable verbose logging"})
 
     add_includedirs("include", "include/tracy")
@@ -51,6 +57,15 @@ package("tracy")
         add_syslinks("pthread")
     elseif is_plat("bsd") then
         add_syslinks("pthread", "execinfo")
+    end
+
+    if on_check then
+        on_check("android", function (package)
+            if package:version() and package:version():eq("v0.13.1") then
+                local ndk = package:toolchain("ndk"):config("ndkver")
+                assert(ndk and tonumber(ndk) > 22, "package(tracy v0.13.1) require ndk version > 22")
+            end
+        end)
     end
 
     on_load(function (package)
@@ -67,6 +82,8 @@ package("tracy")
 #endif]], {plain = true})
         io.replace("public/client/TracyProfiler.cpp", [[RelationProcessorDie]], [[static_cast<LOGICAL_PROCESSOR_RELATIONSHIP>(5)]], {plain = true})
         if package:config("cmake") then
+            io.replace("CMakeLists.txt", [[/$<IF:$<CONFIG:Release>,,$<CONFIG>>]], "", {plain = true})
+
             local configs = {}
             table.insert(configs, "-DCMAKE_BUILD_TYPE=" .. (package:debug() and "Debug" or "Release"))
             table.insert(configs, "-DBUILD_SHARED_LIBS=" .. (package:config("shared") and "ON" or "OFF"))

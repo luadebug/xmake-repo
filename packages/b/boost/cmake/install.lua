@@ -62,17 +62,42 @@ function _add_iostreams_configs(package, configs)
     end
 end
 
+function _add_cmake_required_lib(required_libs, libname)
+    if required_libs[libname] then
+        return
+    end
+
+    required_libs[libname] = true
+    for _, dep_libname in ipairs(libs.get_lib_deps()[libname] or {}) do
+        _add_cmake_required_lib(required_libs, dep_libname)
+    end
+end
+
+function _get_cmake_required_libs(package)
+    local required_libs = {}
+
+    -- Boost.Serialization's CMake target links Boost::spirit. Spirit is an
+    -- interface target, but it must not be excluded or CMake generation fails.
+    if package:config("serialization") then
+        _add_cmake_required_lib(required_libs, "spirit")
+    end
+
+    return required_libs
+end
+
 function _add_libs_configs(package, configs)
     if not package:config("all") then
-        local header_only_buildable
-        if package:is_headeronly() then
-            header_only_buildable = hashset.from(libs.get_header_only_buildable())
-        end
+        local header_only_buildable = hashset.from(libs.get_header_only_buildable())
+        local cmake_required_libs = _get_cmake_required_libs(package)
 
         local exclude_libs = {}
         libs.for_each(function (libname)
-            if header_only_buildable and header_only_buildable:has(libname) then
+            if cmake_required_libs[libname] then
+                -- keep the target available for another selected Boost CMake target
+            elseif header_only_buildable and header_only_buildable:has(libname) then
                 -- continue
+            elseif libname == "container" then
+                -- Don't exclude: needed by header-only modules like lexical_cast
             else
                 if not package:config(libname) then
                     table.insert(exclude_libs, libname)
@@ -82,10 +107,15 @@ function _add_libs_configs(package, configs)
         table.insert(configs, "-DBOOST_EXCLUDE_LIBRARIES=" .. table.concat(exclude_libs, ";"))
     end
 
+    if not package:config("container") then
+        table.insert(configs, "-DBOOST_CONTAINER_HEADER_ONLY=ON")
+    end
+
     table.insert(configs, "-DBOOST_ENABLE_PYTHON=" .. (package:config("python") and "ON" or "OFF"))
     table.insert(configs, "-DBOOST_ENABLE_MPI=" .. (package:config("mpi") and "ON" or "OFF"))
     if package:config("locale") then
         table.insert(configs, "-DCMAKE_CXX_STANDARD=17")
+        table.insert(configs, "-DBOOST_LOCALE_ENABLE_ICU=" .. (package:config("icu") and "ON" or "OFF"))
     end
 
     _add_iostreams_configs(package, configs)
@@ -108,8 +138,28 @@ function _add_opt(package, opt)
     end
 end
 
+function _patch()
+    -- https://github.com/microsoft/vcpkg/pull/38806
+    local file = io.open("libs/container/CMakeLists.txt", "a")
+    file:write([[
+        if(NOT WIN32)
+            set(THREADS_PREFER_PTHREAD_FLAG 1)
+            find_package(Threads REQUIRED)
+            target_link_libraries(boost_container ${_populate} Threads::Threads)
+            if(EMSCRIPTEN)
+                # Boost config needs `-pthread` to see `_POSIX_THREADS`,
+                # but FindTheads.cmake finishes with `CMAKE_HAVE_LIBC_PTHREAD`.
+                target_compile_options(boost_container ${_populate} -pthread)
+            endif()
+        endif()
+    ]])
+    file:close()
+end
+
 function main(package)
     import("libs", {rootdir = package:scriptdir()})
+
+    _patch()
 
     local configs = {"-DBOOST_INSTALL_LAYOUT=system"}
     table.insert(configs, "-DCMAKE_BUILD_TYPE=" .. (package:is_debug() and "Debug" or "Release"))

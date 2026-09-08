@@ -6,18 +6,19 @@ package("shadowhook")
     add_urls("https://github.com/bytedance/android-inline-hook/archive/refs/tags/$(version).tar.gz",
              "https://github.com/bytedance/android-inline-hook.git")
 
+    add_versions("v2.0.1", "77b954483cee4eead5f2ab4571b19d00c5bfa6db1b656e62a3dc7c136a14aedb")
+    add_versions("v2.0.0", "80794c3df5aa9992b240cc3d378c41bb22130c9af5aa8fc259e381f9f3bfd3a8")
     add_versions("v1.1.1", "7071be3a1f720489b1ebe1022cbfde2eae7ab2bc88d36e1dcccf363a23d12b32")
 
-    add_deps("xdl", "linux-syscall-support")
+    add_deps("xdl")
 
-    on_install("android", function (package)
-        io.replace("shadowhook/src/main/cpp/sh_safe.c", [[#include "linux_syscall_support.h"]], [[#include <lss/linux_syscall_support.h>]], {plain = true})
+    on_install("android|arm64-v8a", "android|armeabi-v7a", "android|armeabi", function (package)
         os.cd("shadowhook/src/main/cpp")
         os.mv("shadowhook.map.txt", "shadowhook.map")
         io.writefile("xmake.lua", [[
             add_rules("mode.asan", "mode.release", "mode.debug")
-            add_requires("xdl", "linux-syscall-support")
-            add_packages("xdl", "linux-syscall-support")
+            add_requires("xdl")
+            add_packages("xdl")
             target("shadowhook")
                 set_kind("$(kind)")
                 set_languages("c17")
@@ -28,14 +29,16 @@ package("shadowhook")
 
                 if is_arch("arm64.*", "aarch64") then
                     add_files("arch/arm64/*.c")
+                    add_files("arch/arm64/*.S")
                     add_includedirs("arch/arm64")
                     add_ldflags("-Wl,-z,max-page-size=16384")
                 elseif is_arch("arm.*") then
                     add_files("arch/arm/*.c")
+                    add_files("arch/arm/*.S")
                     add_includedirs("arch/arm")
                 end
 
-                add_includedirs(".", "include", "common", "third_party/bsd")
+                add_includedirs(".", "include", "common", "third_party/bsd", "third_party/lss")
                 add_headerfiles("include/(**.h)")
 
                 if is_mode("asan") then

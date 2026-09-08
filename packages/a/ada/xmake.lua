@@ -1,11 +1,19 @@
 package("ada")
     set_homepage("https://www.ada-url.com")
-    set_description("WHATWG-compliant and fast URL parser written in modern C++")
+    set_description("WHATWG-compliant and fast URL parser written in modern C++, part of Internet Archive, Node.js, Clickhouse, Redpanda, Kong, Telegram, Adguard, Datadog and Cloudflare Workers")
     set_license("Apache-2.0")
 
     set_urls("https://github.com/ada-url/ada/archive/refs/tags/$(version).tar.gz",
              "https://github.com/ada-url/ada.git")
 
+    add_versions("v3.4.4", "77bc5bbc383ed098cc60266ad6ee912de2431bb62d89248c0e17c4e712dcdaf9")
+    add_versions("v3.4.3", "c7a6450019a326c6a10b144249b03ebea662afb2451d74f06963389fe7707460")
+    add_versions("v3.4.2", "3aceb6028eb0787ea77c8f3035a5aaa15108ab11d0fe24f23fe850cf94816523")
+    add_versions("v3.4.1", "befb20175cd05fd10f345bbfd4202af31ad6bb25732beaacac69793eeefa8d4f")
+    add_versions("v3.3.0", "75565e2d4cc8e3ce2dd7927f5c75cc5ebbd3b620468cb0226501dae68d8fe1cd")
+    add_versions("v3.2.7", "91094beb8090875b03af74549f03b9ad3f21545d29c18e88dff0d8004d7c1417")
+    add_versions("v3.2.6", "2e0b0c464ae9b5d97bc99fbec37878dde4a436fa0a34127f5755a0dfeb2c84a0")
+    add_versions("v3.2.5", "cfda162be4b4e30f368e404e8df6704cdb18f0f26c901bb2f0290150c91e04b5")
     add_versions("v3.2.4", "ce79b8fb0f6be6af3762a16c5488cbcd38c31d0655313a7030972a7eb2bda9e5")
     add_versions("v3.2.3", "8b9aa4dff92772d0029d8bc1f3f704afe34a899e23334bf04c7f0d019a5071c2")
     add_versions("v3.2.2", "2eb3d3d7bd2e0c74785f873fc98cf56556294ac76532ef69a01605329b629162")

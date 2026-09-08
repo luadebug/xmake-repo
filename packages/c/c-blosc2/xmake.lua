@@ -6,6 +6,16 @@ package("c-blosc2")
     add_urls("https://github.com/Blosc/c-blosc2/archive/refs/tags/$(version).tar.gz",
              "https://github.com/Blosc/c-blosc2.git")
 
+    add_versions("v3.2.3", "32977709c21f3fec50befa7a031fa624b963427b69d3ffb69c91aadc9279c887")
+    add_versions("v3.2.1", "945cc68d47ba2817279b5d64c0f9b5edce6849a52ac1a46ba8c3ecaedce35769")
+    add_versions("v3.0.3", "535f2165906d59cba0783ca8cd286b358a0c23493e2d9c4c2840569498a163d0")
+    add_versions("v2.23.1", "3a1a55d1e3794fb2b51a12e722d611b3e577443abb7ff9951666511f576ea3da")
+    add_versions("v2.22.0", "6c6fe90babfa09bd3c544643d3fc3ea9516f9cbc74e8b3342f0d50416862b76f")
+    add_versions("v2.21.3", "4ac2e8b7413624662767b4348626f54ad621d6fbd315d0ba8be32a6ebaa21d41")
+    add_versions("v2.21.1", "69bd596bc4c64091df89d2a4fbedc01fc66c005154ddbc466449b9dfa1af5c05")
+    add_versions("v2.21.0", "de69eedd87a8301cdb665f3dab61e7c2b7e4b326a496f9ec88213fc8788d54d5")
+    add_versions("v2.19.1", "cb645982acfeccc8676bc4f29859130593ec05f7f9acf62ebd4f1a004421fa28")
+    add_versions("v2.18.0", "9fce013de33a3f325937b6c29fd64342c1e71de38df6bb9eda09519583d8aabe")
     add_versions("v2.17.1", "53c6ed1167683502f5db69d212106e782180548ca5495745eb580e796b7f7505")
     add_versions("v2.17.0", "f8d5b7167f6032bc286b4de63a7feae281d1845d962edcfa21d81a025eef2bb2")
     add_versions("v2.16.0", "9c2d4a92b43414239120cedf757cbdfbe1e5d9ba21c8779396c553fc0c883f3a")
@@ -16,6 +26,15 @@ package("c-blosc2")
     add_versions("v2.14.3", "2b94c2014ba455e8136e16bf0738ec64c246fcc1a77122d824257caf64aaf441")
     add_versions("v2.13.2", "f2adcd9615f138d1bb16dc27feadab1bb1eab01d77e5e2323d14ad4ca8c3ca21")
     add_versions("v2.10.2", "069785bc14c006c7dab40ea0c620bdf3eb8752663fd55c706d145bceabc2a31d")
+
+    if is_plat("bsd") then
+        -- _XOPEN_SOURCE hides BSD extensions such as flock() on FreeBSD.
+        add_patches(">=3.2.1", "patches/v3.2.1/freebsd.patch", "608aa28d0a0dd5e7e67badc51b4eda85996efe0da8b933117bdf788e1ad7f0bf")
+    end
+
+    if is_plat("wasm") then
+        add_configs("shared", {description = "Build shared library.", default = false, type = "boolean", readonly = true})
+    end
 
     add_configs("lz4", {description = "Enable LZ4 support.", default = true, type = "boolean"})
     add_configs("zlib", {description = "Enable Zlib support.", default = false, type = "boolean"})
@@ -30,14 +49,20 @@ package("c-blosc2")
     add_deps("cmake")
 
     on_load(function (package)
-        for _, deps in ipairs({"lz4", "zlib", "zstd"}) do
-            if package:config(deps) then
-                package:add("deps", deps)
-            end
+        if package:config("lz4") then
+            package:add("deps", "lz4", {configs = {cmake = true}})
+        end
+        if package:config("zlib") then
+            package:add("deps", "zlib")
+        end
+        if package:config("zstd") then
+            package:add("deps", "zstd", {configs = {cmake = true}})
         end
     end)
 
     on_install(function (package)
+        io.replace("CMakeLists.txt", "include(InstallRequiredSystemLibraries)", "", {plain = true})
+
         local configs =
         {
             "-DBUILD_TESTS=OFF",
@@ -62,13 +87,11 @@ package("c-blosc2")
             table.insert(configs, "-DDEACTIVATE_" .. upper .. (package:config(deps) and "=OFF" or "=ON"))
         end
         import("package.tools.cmake").install(package, configs)
-        -- remove crt dll
-        if package:is_plat("windows") then
-            for _, dll in ipairs(os.files(path.join(package:installdir("bin"), "*.dll"))) do
-                if not path.filename(dll):find("blosc2") then
-                    os.rm(dll)
-                end
-            end
+
+        if package:is_plat("windows") and package:config("shared") then
+            io.replace(path.join(package:installdir(), "include/blosc2/blosc2-export.h"),
+                "#define BLOSC_EXPORT\n",
+                "#define BLOSC_EXPORT __declspec(dllimport)\n", {plain = true})
         end
     end)
 

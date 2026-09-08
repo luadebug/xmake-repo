@@ -6,6 +6,10 @@ package("plutovg")
     add_urls("https://github.com/sammycage/plutovg/archive/refs/tags/$(version).tar.gz",
              "https://github.com/sammycage/plutovg.git")
 
+    add_versions("v1.3.3", "2b0d17a6e016f47b86f9c00e2cb82600041b1ea1f7d2a00c2d46ae542cbfed3c")
+    add_versions("v1.3.2", "7bd4e79ce18b1d47517e7e91fbb7cf19d4f01942804a519bc7c0bf32b6325dd5")
+    add_versions("v1.3.1", "bea672eb96ee36c2cbeb911b9bac66dfe989b3ad9a9943101e00aeb2df2aefdb")
+    add_versions("v1.3.0", "4b08587d782f6858e6cb815b455fd7238f45190a57094857a3123883ecb595eb")
     add_versions("v1.1.0", "8aa9860519c407890668c29998e8bb88896ef6a2e6d7ce5ac1e57f18d79e1525")
     add_versions("v1.0.0", "d4a8015aee9eefc29b01e6dabfd3d4b371ae12f9d5e9be09798deb77a528a794")
     add_versions("v0.0.13", "f49d62709d6bf1808ddc9b8f71e22a755484f75c7bbb0fb368f7fb2ffc7cf645")
@@ -18,6 +22,10 @@ package("plutovg")
 
     add_deps("cmake")
 
+    if is_plat("bsd") then
+        add_syslinks("stdthreads", "pthread")
+    end
+
     add_includedirs("include", "include/plutovg")
 
     on_load(function (package)
@@ -27,6 +35,14 @@ package("plutovg")
     end)
 
     on_install(function (package)
+        io.writefile("cmake/plutovgConfig.cmake.in", [[
+@PACKAGE_INIT@
+
+include(CMakeFindDependencyMacro)
+find_dependency(Threads)
+
+include("${CMAKE_CURRENT_LIST_DIR}/plutovgTargets.cmake")
+]])
         local configs = {"-DPLUTOVG_BUILD_EXAMPLES=OFF"}
         table.insert(configs, "-DCMAKE_BUILD_TYPE=" .. (package:is_debug() and "Debug" or "Release"))
         table.insert(configs, "-DBUILD_SHARED_LIBS=" .. (package:config("shared") and "ON" or "OFF"))

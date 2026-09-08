@@ -5,7 +5,14 @@ package("luau")
 
     add_urls("https://github.com/luau-lang/luau/archive/refs/tags/$(version).tar.gz",
              "https://github.com/luau-lang/luau.git")
-    
+
+    add_versions("696", "95e5727b50547fd6021ef98234bd8b04410b7198d78d05e0faddee9c52b3602f")
+    add_versions("0.695", "15280abccdd81171236ee9f139dfd2189d2f5db10f6e50b9bf91148dae94591b")
+    add_versions("0.693", "8843dc7d0a961b289c7e71121ca12db7f2ee41b17d428c59f088789fda9632bf")
+    add_versions("0.691", "ac4d630d475b352f96ddc511773640a69f146e30f465922e8ce406bd9294df4c")
+    add_versions("0.689", "d03c79ee496b732c72f405283ffec07185050ed993347e45a0c4a1518c8cb886")
+    add_versions("0.686", "34dd6a83e71a02f684707b7041674779c03961858a8ecefdd74cad36afc31177")
+    add_versions("0.683", "a2c7aaf906d625e43ca468792acf8e47a9cbd1d4352623b5e62d2a4011faa15c")
     add_versions("0.643", "069702be7646917728ffcddcc72dae0c4191b95dfe455c8611cc5ad943878d3d")
     add_versions("0.642", "cc7954979d2b1f6a138a9b0cb0f2d27e3c11d109594379551bc290c0461965ba")
     add_versions("0.640", "63ada3e4c8c17e5aff8964b16951bfd1b567329dd81c11ae1144b6e95f354762")
@@ -21,15 +28,10 @@ package("luau")
 
     on_install(function(package)
         io.replace("extern/isocline/src/completers.c", "__finddata64_t", "_finddatai64_t", {plain = true})
-        io.replace("CMakeLists.txt", [[cmake_policy(SET CMP0054 NEW)]], [[
-            cmake_policy(SET CMP0054 NEW)
-            cmake_policy(SET CMP0057 NEW)
-        ]], {plain = true})
 
-        local configs = {}
-        table.insert(configs, "-DCMAKE_BUILD_TYPE=" .. (package:debug() and "Debug" or "RelWithDebInfo"))
+        local configs = {"-DLUAU_BUILD_TESTS=OFF", "-DCMAKE_POLICY_DEFAULT_CMP0057=NEW"}
+        table.insert(configs, "-DCMAKE_BUILD_TYPE=" .. (package:is_debug() and "Debug" or "RelWithDebInfo"))
         table.insert(configs, "-DBUILD_SHARED_LIBS=" .. (package:config("shared") and "ON" or "OFF"))
-        table.insert(configs, "-DLUAU_BUILD_TESTS=OFF")
         table.insert(configs, "-DLUAU_BUILD_WEB=" .. ((package:is_plat("wasm") or package:config("build_web")) and "ON" or "OFF"))
         table.insert(configs, "-DLUAU_EXTERN_C=" .. (package:config("extern_c") and "ON" or "OFF"))
 
@@ -38,9 +40,9 @@ package("luau")
         end
 
         if package:is_plat("wasm") then
-            import("package.tools.cmake").build(package, configs, { target = "Luau.Web", buildir = "build" })
+            import("package.tools.cmake").build(package, configs, { target = "Luau.Web", builddir = "build" })
         else
-            import("package.tools.cmake").install(package, configs, { buildir = "build" })
+            import("package.tools.cmake").build(package, configs, { builddir = "build" })
         end
 
         local cmake_file = io.readfile("CMakeLists.txt")
@@ -49,13 +51,14 @@ package("luau")
         for library_name, library_type in cmake_file:gmatch("add_library%(([%a|%.]+) (%w+)") do
             library_type = library_type:lower()
             if library_name:startswith("Luau.") and (library_type == "static" or library_type == "interface") then
+                local linkname = library_name
                 if library_name:endswith(".lib") then
-                    library_name = library_name:sub(1, -5)
+                    linkname = library_name:sub(1, -5)
                 end
                 if library_type == "static" then
-                    table.insert(links, library_name)
+                    table.insert(links, linkname)
                 end
-                local include_dir = library_name:sub(6)
+                local include_dir = linkname:sub(6)
                 include_dir = include_dir:gsub("%..*", "")
                 os.trycp(include_dir .. "/include/*", package:installdir("include"))
             end
@@ -78,17 +81,33 @@ package("luau")
     end)
 
     on_test(function(package)
-        assert(package:check_cxxsnippets({ test = [[
-            #include <lua.h>
-            #include <luacode.h>
-            #include <lualib.h>
+        if package:config("extern_c") then
+            assert(package:check_cxxsnippets({ test = [[
+                extern "C" {
+                    #include <lua.h>
+                    #include <luacode.h>
+                    #include <lualib.h>
+                }
 
-            void test() {
-                auto L = luaL_newstate();
-                luaL_openlibs(L);
-                lua_close(L);
-            }
-        ]]}, {configs = {languages = "cxx11"}}))
+                void test() {
+                    lua_State* L = luaL_newstate();
+                    luaL_openlibs(L);
+                    lua_close(L);
+                }
+            ]]}, {configs = {languages = "cxx11"}}))
+        else
+            assert(package:check_cxxsnippets({ test = [[
+                #include <lua.h>
+                #include <luacode.h>
+                #include <lualib.h>
+
+                void test() {
+                    lua_State* L = luaL_newstate();
+                    luaL_openlibs(L);
+                    lua_close(L);
+                }
+            ]]}, {configs = {languages = "cxx11"}}))
+        end
         assert(package:check_cxxsnippets({ test = [[
             #include <Luau/Common.h>
 

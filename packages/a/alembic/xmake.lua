@@ -1,11 +1,15 @@
 package("alembic")
-    set_homepage("https://alembic.io/")
+    set_homepage("https://www.alembic.io/")
     set_description("Open framework for storing and sharing scene data that includes a C++ library, a file format, and client plugins and applications.")
     set_license("BSD-3-Clause")
 
     add_urls("https://github.com/alembic/alembic/archive/refs/tags/$(version).tar.gz",
              "https://github.com/alembic/alembic.git")
 
+    add_versions("1.8.12", "b6d916c40446e8c502c84273092ab3d98f3f7f6094f8a2b8203d23e2f1d2a4a0")
+    add_versions("1.8.11", "ab299bb4b1894a6675c73fa29940522b54c81a91b1d691ca3470d86b7345ffce")
+    add_versions("1.8.10", "06c9172faf29e9fdebb7be99621ca18b32b474f8e481238a159c87d16b298553")
+    add_versions("1.8.9", "8c59c10813feee917d262c71af77d6fa3db1acaf7c5fecfd4104167077403955")
     add_versions("1.8.8", "ba1f34544608ef7d3f68cafea946ec9cc84792ddf9cda3e8d5590821df71f6c6")
     add_versions("1.8.7", "6de0b97cd14dcfb7b2d0d788c951b6da3c5b336c47322ea881d64f18575c33da")
     add_versions("1.8.6", "c572ebdea3a5f0ce13774dd1fceb5b5815265cd1b29d142cf8c144b03c131c8c")

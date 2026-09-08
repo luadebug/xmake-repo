@@ -6,6 +6,8 @@ package("dlib")
     add_urls("https://github.com/davisking/dlib/archive/refs/tags/$(version).tar.gz",
              "https://github.com/davisking/dlib.git")
 
+    add_versions("v20.0.1", "dab5b4ec4b68bd7dc128a1fb7900723f89d2da107e44cd5def7d38fc57252a9d")
+    add_versions("v20.0", "705749801c7896f5c19c253b6be639f4cef2c1831a9606955f01b600b3d86d80")
     add_versions("v19.24.9", "65ff8debc3ffea84430bdd4992982082caf505404e16d986b7493c00f96f44e9")
     add_versions("v19.24.8", "819cfd28639fe80ca28039f591a15e01772b7ada479de4a002b95bcb8077ce80")
     add_versions("v19.24.6", "22513c353ec9c153300c394050c96ca9d088e02966ac0f639e989e50318c82d6")
@@ -37,7 +39,7 @@ package("dlib")
         if package:config("png") then
             package:add("deps", "libpng")
         end
-        if package:config("png") then
+        if package:config("jpg") then
             package:add("deps", "libjpeg")
         end
         if package:config("gif") then

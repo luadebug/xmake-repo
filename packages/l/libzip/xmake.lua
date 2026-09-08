@@ -9,6 +9,7 @@ package("libzip")
          end})
     add_urls("https://github.com/nih-at/libzip.git")
 
+    add_versions("v1.11.4", "82e9f2f2421f9d7c2466bbc3173cd09595a88ea37db0d559a9d0a2dc60dc722e")
     add_versions("v1.11.3", "76653f135dde3036036c500e11861648ffbf9e1fc5b233ff473c60897d9db0ea")
     add_versions("v1.11.2", "6b2a43837005e1c23fdfee532b78f806863e412d2089b9c42b49ab08cbcd7665")
     add_versions("v1.11.1", "c0e6fa52a62ba11efd30262290dc6970947aef32e0cc294ee50e9005ceac092a")
@@ -72,18 +73,7 @@ package("libzip")
         for config, dep in pairs(configdeps) do
             table.insert(configs, "-DENABLE_" .. config:upper() .. "=" .. (package:config(config) and "ON" or "OFF"))
         end
-
-        if package:is_plat("windows") then
-            os.mkdir(path.join(package:buildir(), "src/pdb"))
-            os.mkdir(path.join(package:buildir(), "lib/pdb"))
-        end
         import("package.tools.cmake").install(package, configs)
-
-        if package:is_plat("windows") and package:is_debug() then
-            local dir = package:installdir(package:config("shared") and "bin" or "lib")
-            os.vcp(path.join(package:buildir(), "src/*.pdb"), dir)
-            os.vcp(path.join(package:buildir(), "lib/*.pdb"), dir)
-        end
     end)
 
     on_test(function (package)

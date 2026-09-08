@@ -6,6 +6,12 @@ package("aws-c-mqtt")
     add_urls("https://github.com/awslabs/aws-c-mqtt/archive/refs/tags/$(version).tar.gz",
              "https://github.com/awslabs/aws-c-mqtt.git")
 
+    add_versions("v1.0.0", "28d9d9edd5f643b5a8db4e4f116c09d0781fd3715341ad3b039da3233a3d7b12")
+    add_versions("v0.16.1", "48fd84e6ff51fdce5cdc4250593d7b0f10db91f8592737c0fe69e0177ee48144")
+    add_versions("v0.16.0", "9bc044a9c2f0d80c384ae6a6907c8817e0b40f673f75c4615c83b20f83140374")
+    add_versions("v0.15.2", "66f3f5edff4ad1f765a86d3342b6017d0f29f950c1c24f8c1edacdc895202edc")
+    add_versions("v0.13.3", "1dfc11d6b3dc1a6d408df64073e8238739b4c50374078d36d3f2d30491d15527")
+    add_versions("v0.13.2", "8d22b181e4c90f5c683e786aadb9fb59a30a699c332e96e16595216ef9058c2f")
     add_versions("v0.12.3", "c2ea5d3b34692c5b71ec4ff3efd8277af01f16706970e8851373c361abaf1d72")
     add_versions("v0.12.1", "04abe47c798bf9dcb95e25ea9acd62a35a3f22e58b61c16912a6275c2f8230fe")
     add_versions("v0.11.0", "3854664c13896b6de3d56412f928435a4933259cb7fe62b10c1f497e6999333c")
@@ -13,14 +19,13 @@ package("aws-c-mqtt")
     add_versions("v0.10.6", "7579fafc74a8751c15c0196eda6ec93d00a17e7f79fb994f34a8f62ceb66cc62")
     add_versions("v0.10.4", "6a41456f9eee15d71e4e2ee162b354865809f26620f1e6e5acb237f190f77f3f")
     add_versions("v0.10.3", "bb938d794b0757d669b5877526363dc6f6f0e43869ca19fc196ffd0f7a35f5b9")
-    add_versions("v0.9.5", "987289535d3c988fe949f49d81268736c96fe27b27c98c899f0a148577f6627b")
 
     add_configs("asan", {description = "Enable Address Sanitize.", default = false, type = "boolean"})
     add_configs("assert_lock_help", {description = "Enable ASSERT_SYNCED_DATA_LOCK_HELD for checking thread issue", default = false, type = "boolean"})
 
     add_deps("cmake", "aws-c-http", "aws-c-io", "aws-c-cal", "aws-c-common")
 
-    on_install("windows|x64", "windows|x86", "linux", "macosx", "bsd", "msys", "cross", function (package)
+    on_install("windows", "linux", "macosx|arm64", "bsd", "msys", "cross", function (package)
         local cmakedir = package:dep("aws-c-common"):installdir("lib", "cmake")
         if package:is_plat("windows") then
             cmakedir = cmakedir:gsub("\\", "/")
@@ -32,7 +37,7 @@ package("aws-c-mqtt")
         table.insert(configs, "-DENABLE_SANITIZERS=" .. (package:config("asan") and "ON" or "OFF"))
         table.insert(configs, "-DASSERT_LOCK_HELD=" .. (package:config("assert_lock_help") and "ON" or "OFF"))
         if package:is_plat("windows") then
-            table.insert(configs, "-DAWS_STATIC_MSVC_RUNTIME_LIBRARY=" .. (package:config("vs_runtime"):startswith("MT") and "ON" or "OFF"))
+            table.insert(configs, "-DAWS_STATIC_MSVC_RUNTIME_LIBRARY=" .. (package:runtimes():startswith("MT") and "ON" or "OFF"))
         end
         import("package.tools.cmake").install(package, configs)
     end)
