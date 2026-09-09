@@ -1,5 +1,5 @@
 package("zstd")
-    set_homepage("https://www.zstd.net/")
+    set_homepage("https://facebook.github.io/zstd/")
     set_description("Zstandard - Fast real-time compression algorithm")
     set_license("BSD-3-Clause")
 
@@ -19,7 +19,7 @@ package("zstd")
     add_configs("tools", {description = "Build tools", default = false, type = "boolean"})
     add_configs("contrib", {description = "Build contrib", default = false, type = "boolean"})
 
-    if is_plat("linux", "bsd") then
+    if is_plat("linux", "cross", "bsd") then
         add_syslinks("pthread")
     end
 

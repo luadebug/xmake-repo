@@ -10,6 +10,9 @@ package("stringzilla")
     add_configs("cpp", {description = "Enable C++ support.", default = true, type = "boolean"})
     add_configs("stringzillas", {description = "Enable advanced API support.", default = false, type = "boolean"})
 
+    add_versions("v5.1.2", "4dfb85a63af83c46509b7cbdfa331256f7d34c3c7a199afd5871ed7df0700c8e")
+    add_versions("v4.6.2", "e950b95383858f643d85088e8eeb26bc0ef32f3c9b37a65b5c499ab3a6c51970")
+    add_versions("v4.6.1", "13d92f35e17bfca8d1a657e1f52d7da1b4c5986de023de04afb546e64e7ec307")
     add_versions("v4.6.0", "cba35adab6f0b25d277451e0130798d1a8742e4c52d0ab29c5a5fca54242d0e3")
     add_versions("v4.5.1", "2b706dff69baa28911f7df445f62391b8cc4b6b599c542a015dd685e7ea01948")
     add_versions("v4.4.2", "5c49782bc7f5a7392c8b960248d3cc9ba87b3a9629b665f731a2d407fefe425b")
@@ -72,10 +75,17 @@ package("stringzilla")
 
     on_install("android|!armeabi-v7a or (!android and !cross)", function (package)
         if package:version():ge("4.0.0") then
-            os.cp("include/stringzilla/*.h", package:installdir("include/stringzilla"))
-            if package:config("cpp") then
-                os.cp("include/stringzilla/*.hpp", package:installdir("include/stringzilla"))
-                os.cp("include/stringzilla/module.modulemap", package:installdir("include/stringzilla"))
+            if package:version():ge("5.0.0") then
+                os.cp("include/stringzilla/**.h", package:installdir("include/stringzilla"), {rootdir = "include/stringzilla"})
+                if package:config("cpp") then
+                    os.cp("include/stringzilla/**.hpp", package:installdir("include/stringzilla"), {rootdir = "include/stringzilla"})
+                end
+            else
+                os.cp("include/stringzilla/*.h", package:installdir("include/stringzilla"))
+                if package:config("cpp") then
+                    os.cp("include/stringzilla/*.hpp", package:installdir("include/stringzilla"))
+                    os.cp("include/stringzilla/module.modulemap", package:installdir("include/stringzilla"))
+                end
             end
             if not package:is_plat("android", "iphoneos", "wasm") and package:config("stringzillas") then
                 os.cp("include/stringzillas", package:installdir("include/stringzillas"))
@@ -105,17 +115,18 @@ package("stringzilla")
         if package:version():gt("3.0.0") then
             if package:config("cpp") then
                 assert(package:check_cxxsnippets({test = [[
+                    #include <cassert>
                     #include <stringzilla/stringzilla.hpp>
                     static void test() {
                         ashvardanian::stringzilla::string s = "hello";
                         assert(s == "hello");
                     }
                 ]]}, {configs = {languages = "c++11"}, includes = "stringzilla/stringzilla.hpp"}))
-                if package:version():ge("4.0.0") then
-                    assert(package:has_cfuncs("sz_sequence_argsort", {includes = "stringzilla/sort.h"}))
-                else
-                    assert(package:has_cfuncs("sz_sort", {includes = "stringzilla/stringzilla.h"}))
-                end
+            end
+            if package:version():ge("4.0.0") then
+                assert(package:has_cfuncs("sz_sequence_argsort", {includes = "stringzilla/sort.h"}))
+            else
+                assert(package:has_cfuncs("sz_sort", {includes = "stringzilla/stringzilla.h"}))
             end
         elseif package:version():gt("2.0.0") then
             assert(package:has_cfuncs("sz_sort", {includes = "stringzilla/stringzilla.h"}))

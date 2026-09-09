@@ -5,6 +5,7 @@ package("opencv")
 
     add_urls("https://github.com/opencv/opencv/archive/$(version).tar.gz",
              "https://github.com/opencv/opencv.git")
+    add_versions("4.14.0", "ee8fb9b30eb60850431b4656447080e3737b56e45719c92b67f245950609f86e")
     add_versions("4.13.0", "1d40ca017ea51c533cf9fd5cbde5b5fe7ae248291ddf2af99d4c17cf8e13017d")
     add_versions("4.12.0", "44c106d5bb47efec04e531fd93008b3fcd1d27138985c5baf4eafac0e1ec9e9d")
     add_versions("4.11.0", "9a7c11f924eff5f8d8070e297b322ee68b9227e003fd600d4b8122198091665f")
@@ -23,6 +24,7 @@ package("opencv")
     add_patches("4.11.0", "https://github.com/opencv/opencv/commit/767dd838d3074409fd72a4d76c320b1370e95943.diff", "376dd90500ab7205084fd4298ff26137ce9678b00233ad20ca2189ef9eca3a58")
     add_patches("4.12.0", "https://github.com/opencv/opencv/pull/27691/commits/90c444abd387ffa70b2e72a34922903a2f0f4f5a.patch", "4811cf490195a7b2952e075c4d713593326bc54fcfa42a33e19d7ed025bb5b6f")
 
+    add_resources("4.14.0", "opencv_contrib", "https://github.com/opencv/opencv_contrib/archive/4.14.0.tar.gz", "4f17abd1bc7f88e19c3380c8de7cbf2d863aced5b5ee8d8934cc7902b67d42c9")
     add_resources("4.13.0", "opencv_contrib", "https://github.com/opencv/opencv_contrib/archive/4.13.0.tar.gz", "1e0077a4fd2960a7d2f4c9e49d6ba7bb891cac2d1be36d7e8e47aa97a9d1039b")
     add_resources("4.12.0", "opencv_contrib", "https://github.com/opencv/opencv_contrib/archive/4.12.0.tar.gz", "4197722b4c5ed42b476d42e29beb29a52b6b25c34ec7b4d589c3ae5145fee98e")
     add_resources("4.11.0", "opencv_contrib", "https://github.com/opencv/opencv_contrib/archive/4.11.0.tar.gz", "2dfc5957201de2aa785064711125af6abb2e80a64e2dc246aca4119b19687041")
@@ -50,7 +52,6 @@ package("opencv")
     add_configs("blas", {description = "Set BLAS vendor.", values = {"mkl", "openblas"}})
     add_configs("cuda", {description = "Enable CUDA support.", default = false, type = "boolean"})
     add_configs("dynamic_parallel", {description = "Dynamically load parallel runtime (TBB etc.).", default = false, type = "boolean"})
-    add_configs("mirror", {description = "Set mirror for download.", values = {"github", "gitcode"}})
 
     if is_plat("macosx") then
         add_frameworks("Foundation", "CoreFoundation", "CoreGraphics", "AppKit", "OpenCL", "Accelerate")
@@ -86,6 +87,14 @@ package("opencv")
         end
     end)
 
+    local vs_map = {
+        ["2015"] = "vc14",
+        ["2017"] = "vc15",
+        ["2019"] = "vc16",
+        ["2022"] = "vc17",
+        ["2026"] = "vc18"
+    }
+
     on_load("android", "linux", "macosx", "windows", "mingw@windows,msys", function (package)
         if package:is_plat("windows") then
             local arch = "x64"
@@ -94,12 +103,7 @@ package("opencv")
             end
             local linkdir = (package:config("shared") and "lib" or "staticlib")
             local vs = package:toolchain("msvc"):config("vs")
-            local vc_ver = "vc13"
-            if     vs == "2015" then vc_ver = "vc14"
-            elseif vs == "2017" then vc_ver = "vc15"
-            elseif vs == "2019" then vc_ver = "vc16"
-            elseif vs == "2022" then vc_ver = "vc17"
-            end
+            local vc_ver = vs_map[vs] or raise("Unknown Visual Studio version: " .. vs)
             package:add("linkdirs", linkdir) -- fix path for 4.9.0/vs2022
             package:add("linkdirs", path.join(arch, vc_ver, linkdir))
         elseif package:is_plat("mingw") then
@@ -138,6 +142,12 @@ package("opencv")
         if package:config("tesseract") then
             package:add("deps", "tesseract 4.1.3") -- OpenCV need tesseract from the v4 series
         end
+        if package:config("eigen") then
+            package:add("deps", "eigen")
+        end
+        if package:config("tbb") then
+            package:add("deps", "tbb", {debug = package:is_debug()})
+        end
     end)
 
     if on_check then
@@ -164,6 +174,7 @@ package("opencv")
                          "-DBUILD_opencv_python2=OFF",
                          "-DBUILD_opencv_python3=OFF",
                          "-DBUILD_JAVA=OFF"}
+        local packagedeps = {}
 
         if package:config("tesseract") then
             table.insert(configs, "-DWITH_TESSERACT=ON")
@@ -177,9 +188,13 @@ package("opencv")
         if package:config("cuda") then
             table.insert(configs, "-DWITH_CUDA=ON")
         end
-        if package:config("mirror") then
-            table.insert(configs, "-DOPENCV_DOWNLOAD_MIRROR_ID=" .. package:config("mirror"))
+        if package:config("eigen") then
+            table.insert(packagedeps, "eigen")
         end
+        if package:config("tbb") then
+            table.insert(configs, "-DBUILD_TBB=OFF")
+        end
+
         table.insert(configs, "-DPARALLEL_ENABLE_PLUGINS=" .. (package:config("dynamic_parallel") and "ON" or "OFF"))
         table.insert(configs, "-DCMAKE_BUILD_TYPE=" .. (package:debug() and "Debug" or "Release"))
         table.insert(configs, "-DBUILD_SHARED_LIBS=" .. (package:config("shared") and "ON" or "OFF"))
@@ -239,7 +254,7 @@ package("opencv")
                 shflags = {"-Wl,-Bsymbolic"}
             end
         end
-        import("package.tools.cmake").install(package, configs, {builddir = "bd", shflags = shflags, ldflags = ldflags})
+        import("package.tools.cmake").install(package, configs, {builddir = "bd", packagedeps = packagedeps, shflags = shflags, ldflags = ldflags})
 
         if not package:is_plat("windows", "android") then
             local cmakefile = os.files(package:installdir("**/OpenCVModules.cmake"))
@@ -286,13 +301,7 @@ package("opencv")
             end
             local linkdir = (package:config("shared") and "lib" or "staticlib")
             local vs = package:toolchain("msvc"):config("vs")
-            local vc_ver = "vc13"
-            if     vs == "2015" then vc_ver = "vc14"
-            elseif vs == "2017" then vc_ver = "vc15"
-            elseif vs == "2019" then vc_ver = "vc16"
-            elseif vs == "2022" then vc_ver = "vc17"
-            end
-
+            local vc_ver = vs_map[vs] or raise("Unknown Visual Studio version: " .. vs)
             local installdir = package:installdir(arch, vc_ver)
             local libfiles = {}
             table.join2(libfiles, os.files(path.join(package:installdir(), linkdir, "*.lib")))

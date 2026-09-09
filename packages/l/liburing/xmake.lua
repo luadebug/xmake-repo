@@ -6,6 +6,8 @@ package("liburing")
     add_urls("https://github.com/axboe/liburing/archive/refs/tags/liburing-$(version).tar.gz",
              "https://github.com/axboe/liburing.git")
 
+    add_versions("2.15", "8d052f2622dcb3678cbaee5ff582a87572672a6c0a56533cdda5b65cb636120a")
+    add_versions("2.14", "5f80964108981c6ad979c735f0b4877d5f49914c2a062f8e88282f26bf61de0c")
     add_versions("2.13", "618e34dbea408fc9e33d7c4babd746036dbdedf7fce2496b1178ced0f9b5b357")
     add_versions("2.12", "f1d10cb058c97c953b4c0c446b11e9177e8c8b32a5a88b309f23fdd389e26370")
     add_versions("2.11", "462c35ef21d67e50490f8684c76641ee2c7796e83d43de796852ef4e40662e33")
@@ -20,10 +22,29 @@ package("liburing")
     add_versions("2.2",  "e092624af6aa244ade2d52181cc07751ac5caba2f3d63e9240790db9ed130bbc")
     add_versions("2.1",  "f1e0500cb3934b0b61c5020c3999a973c9c93b618faff1eba75aadc95bb03e07")
 
+    add_configs("libc", {description = "Build liburing with libc dependency", default = true, type = "boolean"})
+    add_configs("tsan", {description = "Enable thread sanitizer", default = false, type = "boolean"})
+
     on_install("linux|native", function (package)
+        local version = package:version()
         local configs = {}
-        if package:version() and package:version():ge("2.5") then
-            table.insert(configs, "--use-libc")
+        if version and version:ge("2.5") then
+            if package:config("libc") then
+                table.insert(configs, "--use-libc")
+            end
+        else
+            if not package:config("libc") then
+                table.insert(configs, "--nolibc")
+            end
+        end
+        if package:config("asan") then
+            assert(version and version:ge("2.8"), "asan requires liburing >= 2.8")
+            table.insert(configs, "--enable-sanitizer")
+        end
+        if package:config("tsan") then
+            assert(version and version:ge("2.13"), "tsan requires liburing >= 2.13")
+            assert(not package:config("asan"), "tsan and asan cannot be enabled at the same time")
+            table.insert(configs, "--enable-tsan")
         end
         import("package.tools.autoconf").install(package, configs)
 
@@ -35,5 +56,12 @@ package("liburing")
     end)
 
     on_test(function (package)
-        assert(package:has_cfuncs("io_uring_submit", {includes = "liburing.h"}))
+        local opt = {includes = "liburing.h"}
+        if package:config("tsan") then
+            opt.configs = {
+                cxflags = "-fsanitize=thread",
+                ldflags = "-fsanitize=thread"
+            }
+        end
+        assert(package:has_cfuncs("io_uring_submit", opt))
     end)

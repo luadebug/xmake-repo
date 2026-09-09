@@ -7,6 +7,10 @@ package("samurai")
     add_urls("https://github.com/hpc-maths/samurai/archive/refs/tags/$(version).tar.gz",
              "https://github.com/hpc-maths/samurai.git")
 
+    add_versions("v0.33.0", "0f2531deec80cfc412f0a6d67957bdc4781f27ef5b74825515381127911adf88")
+    add_versions("v0.30.1", "551c92fd86617b1ffaaa10face33c20b0cf5738a52105be810e243e4cea2b076")
+    add_versions("v0.29.2", "7816f4269b6b93410d2d89ab65ada793317d5fa08b5f5b8a0e6e83e109d564a0")
+    add_versions("v0.28.0", "94a50fc30714b652157e27ac7870dc8487e1045289d87cb83b28d2c7f6834b94")
     add_versions("v0.27.1", "5cb1ffb87a6a3defbde45037bd80e8277c31d577e20559c6cb2853b82bc989ba")
     add_versions("v0.27.0", "23d3e6475fbc674a887af84333b49ff6ac68fa8326e9edfdb49fa47491c28f4f")
     add_versions("v0.26.1", "07971b2c5359cc33f5e3fb3f4f7d156b6aed91441139a1ae133378ba25e46d7a")

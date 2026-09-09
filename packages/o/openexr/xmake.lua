@@ -6,6 +6,15 @@ package("openexr")
     add_urls("https://github.com/AcademySoftwareFoundation/openexr/archive/refs/tags/$(version).tar.gz",
              "https://github.com/AcademySoftwareFoundation/openexr.git")
 
+    add_versions("v3.4.14", "13c3327100a7b92e4c6a048db03ef07ee2db8e79baa4c517c6fae71e5b80034b")
+    add_versions("v3.4.13", "1ed0cee48ac8c77da235c8ca8ab85d031d43cd790eda36af87fed4cf316cf2df")
+    add_versions("v3.4.12", "a455779c389f65c64220d45b63ead2900081e5f6337cdf93431cb1032c3e2686")
+    add_versions("v3.4.11", "63730442f5fd6c5a79395bdd199040ab3821c229066049f52a57424a984b16ed")
+    add_versions("v3.4.10", "b61ae2d0fa4872c5f5fc45618f107945df37c0eba4853263091b949c513d3319")
+    add_versions("v3.4.9", "328c6fcd794b2538d71c65b401264e6745cf65cbc18f404e55ec3c0230d2373c")
+    add_versions("v3.4.7", "6f57641fb12b019867a766e602252ed4ccb26d7354e3a15688fe9c85a391716e")
+    add_versions("v3.4.6", "f8cfe743a81c8cc1dd3cbaafa7fa76f75ad31456b0fc45a42b086d12530a4e35")
+    add_versions("v3.4.5", "b10f21d3f8ff3211eb1687a2e2bf7a79d361aec8dfaca1f9b79f3d70755b4f48")
     add_versions("v3.4.4", "7c663c3c41da9354b5af277bc2fd1d2360788050b4e0751a32bcd50e8abaef8f")
     add_versions("v3.4.0", "d7b31637d7adc359f5e5a7517ba918cb5997bc1a4ae7a808ec874cdf91da93c0")
     add_versions("v3.3.5", "cb0c88710c906c9bfc59027eb147e780d508c7be1a90b43af3ec9e3c2987b70d")
@@ -26,6 +35,13 @@ package("openexr")
     add_versions("v2.5.5", "59e98361cb31456a9634378d0f653a2b9554b8900f233450f2396ff495ea76b3")
     add_versions("v2.5.3", "6a6525e6e3907715c6a55887716d7e42d09b54d2457323fcee35a0376960bebf")
 
+    if is_plat("linux") then
+        -- GCC15 includes once_flag.h in pthread.h which causes name conflicts, so just use std if possible
+        add_patches(">=3.4.5 <3.4.7", "patches/3.4.5/threads.patch", "9161afa1f79e6d2af9021659007ed6388f67d1fcb2e16c307677c04479408170")
+    end
+    if is_plat("bsd") then
+        add_patches("3.4.7", "patches/3.4.7/freebsd.patch", "ca12a487a8130521cdd628cbce1a2b949b822559bb8d6e3ba3626495c62b5c6e")
+    end
     add_patches("3.4.0", "patches/3.4.0/openjph-include.patch", "d8eb99fd9f064821134ee61c4bfb0e5dff4be557a21698365361250f13e82e53")
     add_patches("3.3.3", "patches/3.3.3/mingw32.patch", "17cbe9d0cbc0c670a846454893c1a427590789cf6bf052a4d800d1263e0faa9a")
 
@@ -53,6 +69,11 @@ package("openexr")
                 local vs_toolset_ver = import("core.base.semver").new(vs_toolset)
                 local minor = vs_toolset_ver:minor()
                 assert(minor and minor >= 30, "package(openexr) dep(libdeflate) requires vs_toolset >= 14.3")
+            end
+        end)
+        on_check("mingw", function (package)
+            if package:is_arch("i386") then
+                raise("package(openexr) dep(openjph): unsupport mingw|i386")
             end
         end)
     end
@@ -97,6 +118,9 @@ package("openexr")
             "-DOPENEXR_FORCE_INTERNAL_IMATH=OFF",
             "-DOPENEXR_IS_SUBPROJECT=ON",
         }
+        if package:is_plat("wasm") and package:version():ge("3.0") then
+            table.insert(configs, "-DOPENEXR_ENABLE_THREADING=OFF")
+        end
         table.insert(configs, "-DCMAKE_BUILD_TYPE=" .. (package:is_debug() and "Debug" or "Release"))
         table.insert(configs, "-DOPENEXR_BUILD_TOOLS=" .. (package:config("tools") and "ON" or "OFF"))
         table.insert(configs, "-DOPENEXR_BUILD_UTILS=" .. (package:config("tools") and "ON" or "OFF"))
